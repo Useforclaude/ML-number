@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.pkl
+*.h5
+models/
+checkpoints/
+*.csv
+!data/raw/numberdata.csv
+*.zip
+.DS_Store
+*.log
+data/processed/
+data/features/
+results/
+logs/

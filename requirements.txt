@@ -1,0 +1,105 @@
+# ===================================
+# Phone Number Price Prediction ML Project
+# Requirements File - Production Ready
+# ===================================
+
+# Core dependencies
+numpy>=1.21.0,<2.0.0
+pandas>=1.3.0,<2.0.0
+scikit-learn>=1.0.0,<2.0.0
+scipy>=1.7.0,<2.0.0
+
+# tier boundary optimization
+scikit-learn>=1.0.0  # ถ้ายังไม่มี (สำหรับ KMeans)
+
+# Machine Learning frameworks
+xgboost>=1.5.0,<2.0.0
+lightgbm>=3.3.0,<4.0.0
+catboost>=1.0.0,<2.0.0
+
+# Hyperparameter optimization
+optuna>=3.0.0,<4.0.0
+
+# Visualization
+matplotlib>=3.5.0,<4.0.0
+seaborn>=0.11.0,<1.0.0
+plotly>=5.0.0,<6.0.0  # เพิ่มสำหรับ interactive plots
+
+# Model serialization
+joblib>=1.1.0,<2.0.0
+dill>=0.3.4,<1.0.0  # เพิ่มสำหรับ serialize complex objects
+
+# API frameworks (optional - choose one)
+# FastAPI stack (recommended for new projects)
+fastapi>=0.68.0,<1.0.0
+uvicorn[standard]>=0.15.0,<1.0.0
+python-multipart>=0.0.5
+pydantic>=1.8.0,<2.0.0  # เพิ่มสำหรับ data validation
+
+# Flask stack (alternative)
+flask>=2.0.0,<3.0.0
+flask-cors>=3.0.0,<4.0.0
+
+# Model interpretability
+shap>=0.40.0,<1.0.0
+
+# Data validation and profiling
+great-expectations>=0.15.0,<1.0.0  # เพิ่มสำหรับ data quality
+pandas-profiling>=3.0.0,<4.0.0     # เพิ่มสำหรับ EDA
+
+# Production deployment
+gunicorn>=20.1.0,<22.0.0
+python-dotenv>=0.19.0,<2.0.0
+redis>=4.0.0,<5.0.0  # เพิ่มสำหรับ caching
+
+# Monitoring and logging
+prometheus-client>=0.12.0,<1.0.0  # เพิ่มสำหรับ metrics
+structlog>=21.0.0,<23.0.0         # เพิ่มสำหรับ structured logging
+
+# System monitoring
+psutil>=5.8.0,<6.0.0
+py-cpuinfo>=8.0.0,<10.0.0  # เพิ่มสำหรับ CPU info
+
+# Development tools (optional)
+pytest>=6.2.0,<8.0.0
+pytest-cov>=3.0.0,<5.0.0
+pytest-asyncio>=0.18.0,<1.0.0  # เพิ่มสำหรับ async tests
+black>=22.0.0,<24.0.0
+flake8>=4.0.0,<7.0.0
+mypy>=0.910,<2.0.0             # เพิ่มสำหรับ type checking
+pre-commit>=2.15.0,<4.0.0      # เพิ่มสำหรับ git hooks
+
+# Jupyter support (optional)
+jupyter>=1.0.0
+ipython>=7.30.0,<9.0.0
+ipywidgets>=7.6.0,<9.0.0  # เพิ่มสำหรับ interactive widgets
+
+# Database support (optional - if needed)
+# sqlalchemy>=1.4.0,<2.0.0
+# psycopg2-binary>=2.9.0,<3.0.0  # PostgreSQL
+# pymongo>=3.12.0,<5.0.0         # MongoDB
+
+# Cloud SDKs (optional - uncomment as needed)
+# boto3>=1.20.0,<2.0.0     # AWS
+# google-cloud-storage>=2.0.0,<3.0.0  # GCP
+# azure-storage-blob>=12.0.0,<13.0.0  # Azure
+
+# ===================================
+# Installation Instructions:
+# ===================================
+# Basic installation:
+#   pip install -r requirements.txt
+#
+# Production API (FastAPI):
+#   pip install -r requirements.txt
+#
+# Production API (Flask):
+#   pip install flask flask-cors gunicorn
+#
+# Development environment:
+#   pip install -r requirements.txt
+#   pip install pytest pytest-cov black flake8 mypy
+#
+# Minimal installation (core ML only):
+#   pip install numpy pandas scikit-learn xgboost lightgbm catboost
+# ===================================
