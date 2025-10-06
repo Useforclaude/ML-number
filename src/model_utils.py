@@ -15,8 +15,42 @@ from optuna.samplers import TPESampler
 import xgboost as xgb
 import lightgbm as lgb
 import catboost as cb
+import sklearn
 import warnings
 warnings.filterwarnings('ignore')
+
+# ====================================================================================
+# SKLEARN VERSION COMPATIBILITY
+# ====================================================================================
+
+# Check sklearn version for cross_val_score parameter compatibility
+SKLEARN_VERSION = tuple(map(int, sklearn.__version__.split('.')[:2]))
+USE_PARAMS_KWARG = SKLEARN_VERSION >= (1, 7)  # sklearn 1.7+ uses 'params' instead of 'fit_params'
+
+def cross_val_score_with_sample_weight(model, X, y, cv, scoring, sample_weight=None, n_jobs=-1):
+    """
+    Wrapper for cross_val_score that handles sklearn version compatibility.
+
+    sklearn < 1.7: uses fit_params={'sample_weight': ...}
+    sklearn >= 1.7: uses params={'sample_weight': ...}
+    """
+    if sample_weight is None:
+        return cross_val_score(model, X, y, cv=cv, scoring=scoring, n_jobs=n_jobs)
+
+    if USE_PARAMS_KWARG:
+        # sklearn 1.7+ (Kaggle)
+        return cross_val_score(
+            model, X, y, cv=cv, scoring=scoring,
+            params={'sample_weight': sample_weight},
+            n_jobs=n_jobs
+        )
+    else:
+        # sklearn < 1.7 (Paperspace, Local)
+        return cross_val_score(
+            model, X, y, cv=cv, scoring=scoring,
+            fit_params={'sample_weight': sample_weight},
+            n_jobs=n_jobs
+        )
 
 # ====================================================================================
 # ADVANCED PREPROCESSING
@@ -434,22 +468,14 @@ def optimize_xgboost(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=N
 
         model = xgb.XGBRegressor(**params)
 
-        # Use sample weights if provided
-        if sample_weight is not None:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
-                n_jobs=-1  # Parallel processing for faster CV
-            )
-        else:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                n_jobs=-1  # Parallel processing for faster CV
-            )
+        # Use sklearn version-compatible cross_val_score
+        scores = cross_val_score_with_sample_weight(
+            model, X_train, y_train,
+            cv=cv_folds,
+            scoring='r2',
+            sample_weight=sample_weight,
+            n_jobs=-1  # Parallel processing for faster CV
+        )
 
         return scores.mean()
 
@@ -584,24 +610,16 @@ def optimize_lightgbm(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=
 
         model = lgb.LGBMRegressor(**params)
 
-        # Use sample weights if provided
+        # Use sklearn version-compatible cross_val_score
         # NOTE: Early stopping is NOT used here because cross_val_score doesn't provide eval_set
         # Early stopping will be used in final training after hyperparameter optimization
-        if sample_weight is not None:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
-                n_jobs=1  # LightGBM handles parallelism internally
-            )
-        else:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                n_jobs=1  # LightGBM handles parallelism internally
-            )
+        scores = cross_val_score_with_sample_weight(
+            model, X_train, y_train,
+            cv=cv_folds,
+            scoring='r2',
+            sample_weight=sample_weight,
+            n_jobs=1  # LightGBM handles parallelism internally
+        )
 
         return scores.mean()
 
@@ -692,22 +710,14 @@ def optimize_catboost(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=
 
         model = cb.CatBoostRegressor(**params)
 
-        # Use sample weights if provided
-        if sample_weight is not None:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
-                n_jobs=1  # CatBoost handles parallelism internally
-            )
-        else:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                n_jobs=1  # CatBoost handles parallelism internally
-            )
+        # Use sklearn version-compatible cross_val_score
+        scores = cross_val_score_with_sample_weight(
+            model, X_train, y_train,
+            cv=cv_folds,
+            scoring='r2',
+            sample_weight=sample_weight,
+            n_jobs=1  # CatBoost handles parallelism internally
+        )
 
         return scores.mean()
 
@@ -758,22 +768,14 @@ def optimize_random_forest(X_train, y_train, n_trials=50, cv_folds=5, sample_wei
 
         model = RandomForestRegressor(**params)
 
-        # Use sample weights if provided
-        if sample_weight is not None:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
-                n_jobs=1  # RF handles parallelism internally via n_jobs
-            )
-        else:
-            scores = cross_val_score(
-                model, X_train, y_train,
-                cv=cv_folds,
-                scoring='r2',
-                n_jobs=1  # RF handles parallelism internally via n_jobs
-            )
+        # Use sklearn version-compatible cross_val_score
+        scores = cross_val_score_with_sample_weight(
+            model, X_train, y_train,
+            cv=cv_folds,
+            scoring='r2',
+            sample_weight=sample_weight,
+            n_jobs=1  # RF handles parallelism internally via n_jobs
+        )
 
         return scores.mean()
     

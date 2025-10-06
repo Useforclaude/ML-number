@@ -8,9 +8,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 from sklearn.metrics import explained_variance_score, max_error
+from sklearn.model_selection import cross_val_score
 from scipy import stats
 import warnings
 warnings.filterwarnings('ignore')
+
+# Import sklearn version compatibility helper
+from src.model_utils import cross_val_score_with_sample_weight
 
 # ====================================================================================
 # EVALUATION METRICS
@@ -364,14 +368,12 @@ def cross_validate_models(models, X, y, cv_folds=5, sample_weight=None):
     for name, model in models:
         print(f"\nCross-validating {name}...")
         
-        # Perform cross-validation
-        if sample_weight is not None:
-            scores = cross_val_score(
-                model, X, y, cv=kf, scoring='r2',
-                params={'sample_weight': sample_weight}  # sklearn 1.7+ uses 'params' not 'fit_params'
-            )
-        else:
-            scores = cross_val_score(model, X, y, cv=kf, scoring='r2')
+        # Perform cross-validation with sklearn version compatibility
+        scores = cross_val_score_with_sample_weight(
+            model, X, y, cv=kf, scoring='r2',
+            sample_weight=sample_weight,
+            n_jobs=1
+        )
         
         # Store results
         result = {
