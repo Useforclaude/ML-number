@@ -536,7 +536,7 @@ def optimize_lightgbm(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=
             # Use small subset for test
             test_size = min(100, len(X_train))
             start_time = time.time()
-            test_model.fit(X_train[:test_size], y_train[:test_size], verbose=False)
+            test_model.fit(X_train[:test_size], y_train[:test_size])
             elapsed = time.time() - start_time
 
             # If successful and reasonable time (< 30 seconds)
@@ -593,14 +593,14 @@ def optimize_lightgbm(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=
                 cv=cv_folds,
                 scoring='r2',
                 fit_params={'sample_weight': sample_weight},
-                n_jobs=-1  # Parallel processing for faster CV
+                n_jobs=1  # LightGBM handles parallelism internally
             )
         else:
             scores = cross_val_score(
                 model, X_train, y_train,
                 cv=cv_folds,
                 scoring='r2',
-                n_jobs=-1  # Parallel processing for faster CV
+                n_jobs=1  # LightGBM handles parallelism internally
             )
 
         return scores.mean()
