@@ -440,7 +440,7 @@ def optimize_xgboost(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=N
                 model, X_train, y_train,
                 cv=cv_folds,
                 scoring='r2',
-                fit_params={'sample_weight': sample_weight},
+                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
                 n_jobs=-1  # Parallel processing for faster CV
             )
         else:
@@ -592,7 +592,7 @@ def optimize_lightgbm(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=
                 model, X_train, y_train,
                 cv=cv_folds,
                 scoring='r2',
-                fit_params={'sample_weight': sample_weight},
+                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
                 n_jobs=1  # LightGBM handles parallelism internally
             )
         else:
@@ -698,7 +698,7 @@ def optimize_catboost(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=
                 model, X_train, y_train,
                 cv=cv_folds,
                 scoring='r2',
-                fit_params={'sample_weight': sample_weight},
+                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
                 n_jobs=1  # CatBoost handles parallelism internally
             )
         else:
@@ -764,7 +764,7 @@ def optimize_random_forest(X_train, y_train, n_trials=50, cv_folds=5, sample_wei
                 model, X_train, y_train,
                 cv=cv_folds,
                 scoring='r2',
-                fit_params={'sample_weight': sample_weight},
+                params={'sample_weight': sample_weight},  # sklearn 1.7+ uses 'params' not 'fit_params'
                 n_jobs=1  # RF handles parallelism internally via n_jobs
             )
         else:

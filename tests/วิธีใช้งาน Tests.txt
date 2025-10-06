@@ -1,0 +1,13 @@
+# รันทุก tests
+python run_tests.py
+
+# รัน specific test module
+python run_tests.py test_features
+python run_tests.py test_models
+python run_tests.py test_integration
+
+# รันด้วย pytest (ถ้าติดตั้ง)
+pytest tests/ -v
+
+# รันพร้อม coverage report
+pytest tests/ --cov=src --cov-report=html

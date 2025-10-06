@@ -368,7 +368,7 @@ def cross_validate_models(models, X, y, cv_folds=5, sample_weight=None):
         if sample_weight is not None:
             scores = cross_val_score(
                 model, X, y, cv=kf, scoring='r2',
-                fit_params={'sample_weight': sample_weight}
+                params={'sample_weight': sample_weight}  # sklearn 1.7+ uses 'params' not 'fit_params'
             )
         else:
             scores = cross_val_score(model, X, y, cv=kf, scoring='r2')

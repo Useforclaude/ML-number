@@ -1,0 +1,42 @@
+# 📍 วางไว้ที่: ML_Project_Refactored/requirements-test.txt
+
+# Testing Framework
+pytest>=7.1.0
+pytest-cov>=3.0.0
+pytest-xdist>=2.5.0        # Parallel test execution
+pytest-timeout>=2.1.0      # Test timeout handling
+pytest-mock>=3.6.0         # Mocking support
+pytest-benchmark>=3.4.1    # Performance benchmarking
+
+# Code Coverage
+coverage>=6.3
+codecov>=2.1.12
+
+# Performance Testing
+memory-profiler>=0.60.0
+line-profiler>=3.5.0
+py-spy>=0.3.14            # Profiling tool
+
+# Test Utilities
+factory-boy>=3.2.0        # Test data factories
+faker>=13.0.0             # Fake data generation
+hypothesis>=6.40.0        # Property-based testing
+
+# Mocking and Fixtures
+responses>=0.20.0         # Mock HTTP requests
+freezegun>=1.2.0          # Mock time/date
+
+# Code Quality
+black>=22.3.0             # Code formatting
+flake8>=4.0.0            # Linting
+mypy>=0.950              # Type checking
+isort>=5.10.0            # Import sorting
+
+# Documentation Testing
+doctest-plus>=0.0.1      # Enhanced doctest
+
+# Mutation Testing (Optional)
+mutmut>=2.4.0            # Mutation testing
+
+# Load Testing (Optional) 
+locust>=2.8.0            # Load testing for APIs

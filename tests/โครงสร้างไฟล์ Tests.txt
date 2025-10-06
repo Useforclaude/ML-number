@@ -1,0 +1,11 @@
+ML_Project_Refactored/
+├── tests/                           # 📍 สร้าง folder นี้ใหม่
+│   ├── __init__.py
+│   ├── test_features.py            # Unit tests for feature engineering
+│   ├── test_preprocessing.py       # Unit tests for data preprocessing
+│   ├── test_models.py              # Unit tests for model training
+│   ├── test_integration.py         # Integration tests
+│   ├── test_api.py                 # API endpoint tests
+│   └── fixtures/                   # Test data
+│       ├── sample_phones.csv
+│       └── test_config.py
