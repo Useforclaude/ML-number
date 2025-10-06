@@ -822,7 +822,7 @@ class AdvancedStackingEnsemble:
             estimators=self.base_models,
             final_estimator=self.meta_model,
             cv=self.cv_folds,
-            n_jobs=-1,
+            n_jobs=1,  # Prevent GPU device conflict with CatBoost/XGBoost (was: -1)
             passthrough=False
         )
         

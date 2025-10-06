@@ -335,7 +335,7 @@ def create_ensemble_models(trained_models, X_train, y_train, X_test, y_test,
     # 3. Voting Ensemble
     print("\n📊 Creating Voting Ensemble...")
     voting_models = [(name, trained_models[name]) for name in top_models]
-    voting_ensemble = VotingRegressor(voting_models, n_jobs=-1)
+    voting_ensemble = VotingRegressor(voting_models, n_jobs=1)  # Prevent GPU conflict (was: -1)
     
     if sample_weight is not None:
         voting_ensemble.fit(X_train, y_train, sample_weight=sample_weight)
