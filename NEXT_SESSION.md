@@ -1,12 +1,48 @@
 # 🎯 NEXT SESSION GUIDE
 
-**Last Updated**: 2025-10-06 21:25 PM
-**Session**: 011D (scikit-learn 1.7 API Fix)
+**Last Updated**: 2025-10-06 22:35 PM
+**Session**: 011E (Universal sklearn Compatibility)
 **Status**: ✅ COMPLETED
 
 ---
 
-## 🚨 LATEST FIX - Session 011D
+## 🚨 LATEST FIX - Session 011E ⭐ UNIVERSAL FIX
+
+### ⚡ sklearn Version Compatibility แก้สำหรับทุก Platform!
+
+**Problem ที่แก้:**
+- Session 011D แก้ให้ Kaggle (sklearn 1.7) แต่ทำให้ Paperspace (sklearn < 1.7) พัง
+- ต้องการ code ที่ใช้ได้ทั้ง 2 platform พร้อมกัน
+
+**Solution:**
+- สร้าง `cross_val_score_with_sample_weight()` wrapper function
+- Auto-detect sklearn version แล้วใช้ parameter ที่ถูกต้อง:
+  * sklearn >= 1.7: ใช้ `params` (Kaggle)
+  * sklearn < 1.7: ใช้ `fit_params` (Paperspace, Colab, Local เก่า)
+
+**แก้ไขแล้ว:**
+1. ✅ model_utils.py: เพิ่ม compatibility wrapper + อัปเดต 4 functions
+2. ✅ evaluate.py: ใช้ wrapper function
+
+**ผลลัพธ์:**
+- ✅ Kaggle (sklearn 1.7): Works!
+- ✅ Paperspace (sklearn < 1.7): Works!
+- ✅ Local (any version): Works!
+- ✅ **Single `main` branch - ไม่ต้องแยก branch ตาม platform**
+
+**Git Commit:**
+- `4bbaf0b` - Session 011E: Universal sklearn compatibility
+
+**Deployment:**
+```bash
+# ทุก platform ใช้คำสั่งเดียวกัน
+git pull origin main
+# Restart kernel และ re-run cells
+```
+
+---
+
+## 🚨 Session 011D - sklearn 1.7 Fix (Superseded by 011E)
 
 ### ⚡ scikit-learn 1.7 API Compatibility แก้ไขแล้ว!
 
