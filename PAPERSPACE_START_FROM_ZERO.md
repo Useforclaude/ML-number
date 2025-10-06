@@ -57,23 +57,67 @@ https://www.paperspace.com/
 
 ## 📦 STEP 3: Clone GitHub Project
 
+### **⚠️ สำคัญ: เช็คก่อนว่ามี folder อยู่แล้วหรือไม่**
+
 **Copy-paste ทีละบรรทัดใน Terminal:**
 
 ```bash
 # 1. ไปที่ /storage (folder ถาวร)
 cd /storage
 
-# 2. Clone project (Session 011E - Universal Fix)
+# 2. เช็คว่ามี ML-number อยู่แล้วหรือไม่
+ls -lh
+
+# ถ้าเห็น ML-number อยู่แล้ว → ข้าม git clone, ใช้ git pull แทน
+# ถ้าไม่เห็น ML-number → ทำตามด้านล่าง
+```
+
+---
+
+### **Option A: ครั้งแรก (ไม่มี ML-number)**
+
+```bash
+# Clone project (Session 011E - Universal Fix)
 git clone https://github.com/Useforclaude/ML-number.git
 
-# 3. เข้า folder
+# เข้า folder
 cd ML-number
 
-# 4. เช็ค files
+# เช็ค files
 ls -lh
 
 # ควรเห็น:
 # src/  notebooks/  data/  requirements.txt  README.md
+```
+
+---
+
+### **Option B: มี ML-number อยู่แล้ว** ⭐ (Session ต่อ)
+
+```bash
+# เข้า folder ที่มีอยู่
+cd ML-number
+
+# Pull code ล่าสุด (Session 011E)
+git pull origin main
+
+# เช็ค commits ล่าสุด
+git log --oneline -5
+
+# ควรเห็น:
+# 388349d Create Kaggle Session 011E package
+# 60f99ec Add Paperspace start-from-zero guide
+# 93483ba Add Paperspace quick update guide
+# eabfe1e Add Session 011E documentation
+# 4bbaf0b Session 011E: Universal sklearn compatibility  ← ต้องมี!
+```
+
+**⚠️ ถ้า git pull ให้ error "directory already exists":**
+```bash
+cd /storage
+rm -rf ML-number  # ลบ folder เก่า
+git clone https://github.com/Useforclaude/ML-number.git  # Clone ใหม่
+cd ML-number
 ```
 
 ---
@@ -327,7 +371,65 @@ for df in [X_tr_processed, X_val_processed, X_test_processed]:
 print(f"   ✅ Processed features: {X_tr_processed.shape[1]}")
 
 # ====================================================================================
-# STEP 6: PRODUCTION TRAINING (9-12 HOURS)
+# STEP 6: CHECKPOINT SETUP (for Session Resume)
+# ====================================================================================
+import joblib
+import os
+
+# Checkpoint paths
+checkpoint_path = '/storage/ML-number/checkpoint_training.pkl'
+preprocessor_path = '/storage/ML-number/checkpoint_preprocessor.pkl'
+data_path = '/storage/ML-number/checkpoint_data.pkl'
+
+# Check if checkpoint exists (Resume from previous session)
+if os.path.exists(checkpoint_path):
+    print("\n" + "="*80)
+    print("🔄 CHECKPOINT FOUND - RESUME AVAILABLE")
+    print("="*80)
+    print(f"📂 Checkpoint: {checkpoint_path}")
+
+    try:
+        checkpoint = joblib.load(checkpoint_path)
+        print(f"✅ Last saved: {checkpoint.get('timestamp', 'Unknown')}")
+        print(f"✅ Progress: {checkpoint.get('progress', 'Unknown')}")
+        print(f"✅ Best R² so far: {checkpoint.get('best_r2', 'Unknown')}")
+
+        resume = input("\n⚠️  Resume from checkpoint? (y/n): ").lower().strip()
+
+        if resume == 'y':
+            print("\n🔄 Loading checkpoint...")
+            results = checkpoint['results']
+            X_tr_processed = checkpoint['X_tr_processed']
+            X_val_processed = checkpoint['X_val_processed']
+            X_test_processed = checkpoint['X_test_processed']
+            y_tr = checkpoint['y_tr']
+            y_val = checkpoint['y_val']
+
+            print("✅ Checkpoint loaded successfully!")
+            print("✅ Continuing from where you left off...")
+
+            # Skip to results display
+            print("\n" + "="*80)
+            print("✅ RESULTS FROM CHECKPOINT")
+            print("="*80)
+            print(f"🏆 Best Model: {results.get('best_model_name', 'N/A')}")
+            print(f"📊 Best R²: {results.get('best_score', 0):.4f}")
+            print(f"📉 MAE: {results.get('best_mae', 0):.2f}")
+            print(f"📉 RMSE: {results.get('best_rmse', 0):.2f}")
+            print("="*80)
+
+        else:
+            print("\n⚠️  Starting fresh training (checkpoint ignored)")
+
+    except Exception as e:
+        print(f"\n❌ Error loading checkpoint: {e}")
+        print("⚠️  Starting fresh training...")
+
+else:
+    print("\n💾 No checkpoint found - Starting fresh training")
+
+# ====================================================================================
+# STEP 7: PRODUCTION TRAINING (9-12 HOURS)
 # ====================================================================================
 print("\n" + "="*80)
 print("🔥 STARTING PRODUCTION TRAINING")
@@ -335,6 +437,7 @@ print("="*80)
 print("⏱️  Expected time: 9-12 hours")
 print("🎯 Target R²: > 0.93")
 print("📊 Optimization: 100 trials per model (XGBoost, LightGBM, CatBoost, RF)")
+print("💾 Auto-checkpoint: Every 30 minutes")
 print("="*80 + "\n")
 
 start_time = time.time()
@@ -364,10 +467,44 @@ try:
     print(f"📉 RMSE: {results['best_rmse']:.2f}")
     print("="*80)
 
-    # Save results
-    import joblib
+    # ====================================================================================
+    # SAVE CHECKPOINT (for future resume)
+    # ====================================================================================
+    from datetime import datetime
+
+    print("\n💾 Saving checkpoint...")
+
+    # Save full checkpoint
+    checkpoint = {
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'progress': '100% - Training Complete',
+        'best_r2': results['best_score'],
+        'results': results,
+        'X_tr_processed': X_tr_processed,
+        'X_val_processed': X_val_processed,
+        'X_test_processed': X_test_processed,
+        'y_tr': y_tr,
+        'y_val': y_val,
+        'elapsed_hours': elapsed_hours
+    }
+
+    joblib.dump(checkpoint, checkpoint_path)
+    print(f"✅ Checkpoint saved: {checkpoint_path}")
+
+    # Save results separately (lighter file)
     joblib.dump(results, '/storage/ML-number/paperspace_results.pkl')
-    print("\n💾 Results saved to: /storage/ML-number/paperspace_results.pkl")
+    print(f"✅ Results saved: /storage/ML-number/paperspace_results.pkl")
+
+    # Save preprocessor
+    joblib.dump(preprocessor, preprocessor_path)
+    print(f"✅ Preprocessor saved: {preprocessor_path}")
+
+    print("\n📋 Saved files:")
+    print(f"   1. {checkpoint_path} (Full checkpoint - for resume)")
+    print(f"   2. /storage/ML-number/paperspace_results.pkl (Results only)")
+    print(f"   3. {preprocessor_path} (Preprocessor)")
+    print(f"   4. /storage/ML-number/models/deployed/best_model.pkl (Best model)")
+    print("\n💡 Tip: Next session, run this cell again to resume or see results!")
 
 except Exception as e:
     print("\n" + "="*80)
@@ -552,26 +689,381 @@ watch -n 2 nvidia-smi
 
 ---
 
-## 📦 หลัง Training เสร็จ
+## 📦 หลัง Training เสร็จ - ใช้งาน Model
 
-### Save Model:
-```python
-# Model อยู่ที่
-/storage/ML-number/models/deployed/best_model.pkl
+### 🎯 Model Files ที่ได้:
 
-# Download to local:
-# 1. Right-click file in Jupyter Lab
-# 2. Click "Download"
+```
+/storage/ML-number/
+├── models/deployed/best_model.pkl           ← Model สำเร็จรูป (production)
+├── checkpoint_training.pkl                   ← Checkpoint (for resume)
+├── checkpoint_preprocessor.pkl               ← Preprocessor
+└── paperspace_results.pkl                    ← Results only
 ```
 
-### Load Model (ใน Notebook ใหม่):
+---
+
+## 🔮 วิธีใช้ Model ทำนาย (3 วิธี)
+
+### **วิธีที่ 1: ทำนายใน Paperspace/Kaggle (แนะนำ)** ⭐
+
+**Cell ใหม่ใน Notebook เดิม:**
+
+```python
+# Load model และ preprocessor
+import joblib
+import pandas as pd
+import numpy as np
+
+# Load best model
+model_pkg = joblib.load('/storage/ML-number/models/deployed/best_model.pkl')
+best_model = model_pkg['model']
+feature_names = model_pkg['feature_names']
+
+# Load preprocessor
+preprocessor = joblib.load('/storage/ML-number/checkpoint_preprocessor.pkl')
+
+print(f"✅ Model: {model_pkg['model_name']}")
+print(f"✅ R² Score: {model_pkg['r2_score']:.4f}")
+print(f"✅ Features: {len(feature_names)}")
+
+# ====================================================================================
+# ทำนายเบอร์ใหม่
+# ====================================================================================
+
+# ตัวอย่าง: ทำนายเบอร์โทรศัพท์
+new_phone_numbers = [
+    '0899999999',  # เบอร์สวย
+    '0812345678',  # เบอร์ธรรมดา
+    '0866666666',  # เบอร์เลขซ้ำ
+]
+
+# 1. สร้าง DataFrame
+df_new = pd.DataFrame({'phone_number': new_phone_numbers})
+
+# 2. Create features (ใช้ function เดียวกับ training)
+from src.features import create_all_features
+X_new, _, _ = create_all_features(df_new)
+
+# 3. Preprocess
+X_new_processed = preprocessor.transform(X_new)
+
+# Clean NaN/Inf
+X_new_processed.replace([np.inf, -np.inf], np.nan, inplace=True)
+X_new_processed.fillna(X_new_processed.median(), inplace=True)
+
+# 4. Predict
+predictions = best_model.predict(X_new_processed)
+
+# 5. Display results
+print("\n" + "="*80)
+print("🔮 PREDICTIONS")
+print("="*80)
+for phone, price in zip(new_phone_numbers, predictions):
+    print(f"📱 {phone}  →  ฿{price:,.0f}")
+print("="*80)
+```
+
+**Expected Output:**
+```
+✅ Model: Stacking_Ensemble
+✅ R² Score: 0.9345
+✅ Features: 250
+
+================================================================================
+🔮 PREDICTIONS
+================================================================================
+📱 0899999999  →  ฿125,000
+📱 0812345678  →  ฿8,500
+📱 0866666666  →  ฿45,000
+================================================================================
+```
+
+---
+
+### **วิธีที่ 2: Download Model มาใช้ Local**
+
+#### Step 1: Download Files
+
+**จาก Paperspace/Kaggle:**
+
+1. ใน Jupyter Lab File Browser (ซ้ายมือ)
+2. Navigate to `/storage/ML-number/models/deployed/`
+3. Right-click `best_model.pkl` → **Download**
+4. Right-click `/storage/ML-number/checkpoint_preprocessor.pkl` → **Download**
+
+**จะได้ไฟล์:**
+```
+Downloads/
+├── best_model.pkl          (~50-100 MB)
+└── checkpoint_preprocessor.pkl  (~5 MB)
+```
+
+---
+
+#### Step 2: ใช้งานใน Local Python
+
+**สร้างไฟล์ `predict_local.py`:**
+
+```python
+#!/usr/bin/env python3
+"""
+Predict phone number prices using trained model
+"""
+import joblib
+import pandas as pd
+import numpy as np
+import sys
+
+# Add project to path (ถ้ารันจาก project folder)
+sys.path.insert(0, '/path/to/number-ML')
+
+from src.features import create_all_features
+
+# ====================================================================================
+# Load Model และ Preprocessor
+# ====================================================================================
+
+print("📥 Loading model...")
+model_pkg = joblib.load('best_model.pkl')
+best_model = model_pkg['model']
+feature_names = model_pkg['feature_names']
+
+print("📥 Loading preprocessor...")
+preprocessor = joblib.load('checkpoint_preprocessor.pkl')
+
+print(f"✅ Model: {model_pkg['model_name']}")
+print(f"✅ R² Score: {model_pkg['r2_score']:.4f}")
+
+# ====================================================================================
+# Predict Function
+# ====================================================================================
+
+def predict_price(phone_number):
+    """
+    Predict price for a single phone number
+
+    Parameters:
+    -----------
+    phone_number : str
+        10-digit phone number (e.g., '0899999999')
+
+    Returns:
+    --------
+    price : float
+        Predicted price in Thai Baht
+    """
+    # Create DataFrame
+    df = pd.DataFrame({'phone_number': [phone_number]})
+
+    # Create features
+    X, _, _ = create_all_features(df)
+
+    # Preprocess
+    X_processed = preprocessor.transform(X)
+    X_processed.replace([np.inf, -np.inf], np.nan, inplace=True)
+    X_processed.fillna(X_processed.median(), inplace=True)
+
+    # Predict
+    price = best_model.predict(X_processed)[0]
+
+    return price
+
+# ====================================================================================
+# Example Usage
+# ====================================================================================
+
+if __name__ == '__main__':
+    # ตัวอย่างการใช้งาน
+    test_numbers = [
+        '0899999999',
+        '0812345678',
+        '0866666666',
+        '0888888888',
+        '0812341234',
+    ]
+
+    print("\n" + "="*80)
+    print("🔮 PREDICTIONS")
+    print("="*80)
+
+    for phone in test_numbers:
+        price = predict_price(phone)
+        print(f"📱 {phone}  →  ฿{price:,.0f}")
+
+    print("="*80)
+
+    # Interactive mode
+    print("\n💡 Enter phone numbers to predict (or 'quit' to exit):")
+    while True:
+        phone = input("\n📱 Phone number: ").strip()
+
+        if phone.lower() in ['quit', 'exit', 'q']:
+            print("👋 Goodbye!")
+            break
+
+        if len(phone) != 10 or not phone.startswith('0'):
+            print("❌ Invalid format. Must be 10 digits starting with 0")
+            continue
+
+        try:
+            price = predict_price(phone)
+            print(f"💰 Predicted price: ฿{price:,.0f}")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+```
+
+**รัน:**
+```bash
+python predict_local.py
+```
+
+**Expected Output:**
+```
+📥 Loading model...
+📥 Loading preprocessor...
+✅ Model: Stacking_Ensemble
+✅ R² Score: 0.9345
+
+================================================================================
+🔮 PREDICTIONS
+================================================================================
+📱 0899999999  →  ฿125,000
+📱 0812345678  →  ฿8,500
+📱 0866666666  →  ฿45,000
+📱 0888888888  →  ฿180,000
+📱 0812341234  →  ฿6,000
+================================================================================
+
+💡 Enter phone numbers to predict (or 'quit' to exit):
+
+📱 Phone number: 0877777777
+💰 Predicted price: ฿95,000
+
+📱 Phone number: quit
+👋 Goodbye!
+```
+
+---
+
+### **วิธีที่ 3: Batch Prediction (ทำนายหลายเบอร์พร้อมกัน)**
+
+**สร้างไฟล์ CSV:**
+
+`phone_numbers.csv`:
+```csv
+phone_number
+0899999999
+0812345678
+0866666666
+0888888888
+0877777777
+```
+
+**Python Script:**
+
 ```python
 import joblib
-model = joblib.load('/storage/ML-number/models/deployed/best_model.pkl')
+import pandas as pd
+import numpy as np
+import sys
+
+sys.path.insert(0, '/path/to/number-ML')
+from src.features import create_all_features
+
+# Load model
+model_pkg = joblib.load('best_model.pkl')
+best_model = model_pkg['model']
+
+# Load preprocessor
+preprocessor = joblib.load('checkpoint_preprocessor.pkl')
+
+# Read input CSV
+df_input = pd.read_csv('phone_numbers.csv')
+print(f"📥 Loaded {len(df_input)} phone numbers")
+
+# Create features
+X, _, _ = create_all_features(df_input)
+
+# Preprocess
+X_processed = preprocessor.transform(X)
+X_processed.replace([np.inf, -np.inf], np.nan, inplace=True)
+X_processed.fillna(X_processed.median(), inplace=True)
 
 # Predict
-predictions = model['model'].predict(X_test_processed)
+predictions = best_model.predict(X_processed)
+
+# Add to DataFrame
+df_input['predicted_price'] = predictions
+
+# Save results
+df_input.to_csv('predictions_output.csv', index=False)
+print(f"✅ Saved predictions to: predictions_output.csv")
+
+# Display
+print("\n" + "="*80)
+print("🔮 BATCH PREDICTIONS")
+print("="*80)
+print(df_input.to_string(index=False))
+print("="*80)
 ```
+
+**Output:**
+```
+📥 Loaded 5 phone numbers
+✅ Saved predictions to: predictions_output.csv
+
+================================================================================
+🔮 BATCH PREDICTIONS
+================================================================================
+ phone_number  predicted_price
+   0899999999           125000
+   0812345678             8500
+   0866666666            45000
+   0888888888           180000
+   0877777777            95000
+================================================================================
+```
+
+---
+
+## 📊 Model Information (ข้อมูลที่ได้จาก Model)
+
+```python
+import joblib
+
+model_pkg = joblib.load('best_model.pkl')
+
+print("📋 Model Package Contents:")
+print(f"   model_name: {model_pkg.get('model_name')}")
+print(f"   r2_score: {model_pkg.get('r2_score')}")
+print(f"   timestamp: {model_pkg.get('timestamp')}")
+print(f"   feature_names: {len(model_pkg.get('feature_names', []))} features")
+print(f"   config: {model_pkg.get('config', {}).keys()}")
+```
+
+**Keys available:**
+```
+- model              ← Trained model object
+- model_name         ← Model name (e.g., "Stacking_Ensemble")
+- feature_names      ← List of 250+ feature names
+- preprocessor       ← AdvancedPreprocessor instance
+- r2_score           ← Test R² score
+- timestamp          ← Deployment timestamp
+- config             ← Training configuration
+```
+
+---
+
+## 🎯 Summary: 3 วิธีใช้ Model
+
+| วิธี | Use Case | Difficulty | Location |
+|------|----------|------------|----------|
+| **1. ใน Notebook** | ทดสอบ, prototype | ⭐ ง่าย | Paperspace/Kaggle |
+| **2. Local Script** | Production, automation | ⭐⭐ กลาง | Local machine |
+| **3. Batch CSV** | ทำนายหลายเบอร์ | ⭐⭐⭐ ซับซ้อน | Local/Server |
+
+**แนะนำเริ่มจาก**: วิธีที่ 1 (ใน Notebook) → ง่ายที่สุด!
 
 ---
 
