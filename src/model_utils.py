@@ -53,6 +53,49 @@ def cross_val_score_with_sample_weight(model, X, y, cv, scoring, sample_weight=N
         )
 
 # ====================================================================================
+# XGBOOST VERSION COMPATIBILITY
+# ====================================================================================
+
+# Check XGBoost version for GPU parameter compatibility
+XGBOOST_VERSION = tuple(map(int, xgb.__version__.split('.')[:2]))
+USE_MODERN_XGBOOST = XGBOOST_VERSION >= (2, 0)  # XGBoost 2.0+ uses 'device' instead of 'tree_method=gpu_hist'
+
+def get_xgboost_gpu_params():
+    """
+    Return GPU parameters based on XGBoost version.
+
+    XGBoost < 2.0 (Paperspace, Colab, older installs):
+        tree_method='gpu_hist', gpu_id=0
+
+    XGBoost >= 2.0 (Kaggle, newer installs):
+        device='cuda', tree_method='hist'
+    """
+    if USE_MODERN_XGBOOST:
+        # XGBoost 2.0+ (Kaggle, newer environments)
+        return {
+            'device': 'cuda',
+            'tree_method': 'hist'
+        }
+    else:
+        # XGBoost < 2.0 (Paperspace, Colab, older environments)
+        return {
+            'tree_method': 'gpu_hist',
+            'gpu_id': 0
+        }
+
+def get_xgboost_cpu_params():
+    """Return CPU parameters (version-independent)"""
+    if USE_MODERN_XGBOOST:
+        return {
+            'device': 'cpu',
+            'tree_method': 'hist'
+        }
+    else:
+        return {
+            'tree_method': 'hist'
+        }
+
+# ====================================================================================
 # ADVANCED PREPROCESSING
 # ====================================================================================
 
@@ -454,17 +497,18 @@ def optimize_xgboost(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=N
             'enable_categorical': True
         }
 
-        # ✅ GPU CONFIGURATION (XGBoost 2.0+ syntax)
+        # ✅ GPU CONFIGURATION (Version-compatible)
         if use_gpu:
-            params['device'] = 'cuda'
-            params['tree_method'] = 'hist'
+            params.update(get_xgboost_gpu_params())
             if trial.number == 0:
-                print(f"      🔥 XGBoost using GPU (device=cuda)")
+                if USE_MODERN_XGBOOST:
+                    print(f"      🔥 XGBoost using GPU (device=cuda, XGBoost {xgb.__version__})")
+                else:
+                    print(f"      🔥 XGBoost using GPU (tree_method=gpu_hist, XGBoost {xgb.__version__})")
         else:
-            params['device'] = 'cpu'
-            params['tree_method'] = 'hist'
+            params.update(get_xgboost_cpu_params())
             if trial.number == 0:
-                print(f"      ⚪ XGBoost using CPU (device=cpu)")
+                print(f"      ⚪ XGBoost using CPU (XGBoost {xgb.__version__})")
 
         model = xgb.XGBRegressor(**params)
 
@@ -493,13 +537,11 @@ def optimize_xgboost(X_train, y_train, n_trials=100, cv_folds=5, sample_weight=N
     best_params['n_jobs'] = -1
     best_params['enable_categorical'] = True
 
-    # ✅ GPU CONFIGURATION FOR BEST PARAMS (XGBoost 2.0+ syntax)
+    # ✅ GPU CONFIGURATION FOR BEST PARAMS (Version-compatible)
     if use_gpu:
-        best_params['device'] = 'cuda'
-        best_params['tree_method'] = 'hist'
+        best_params.update(get_xgboost_gpu_params())
     else:
-        best_params['device'] = 'cpu'
-        best_params['tree_method'] = 'hist'
+        best_params.update(get_xgboost_cpu_params())
 
     print(f"   Best CV R² Score: {study.best_value:.6f}")
 

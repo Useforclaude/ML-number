@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 
 # Package configuration
-PACKAGE_NAME = "packages/kaggle/number-ML-kaggle-SESSION-011E-20251006.zip"
+PACKAGE_NAME = "packages/kaggle/number-ML-kaggle-SESSION-011F-20251007.zip"
 
 # Files to include with their paths
 files_to_include = {
