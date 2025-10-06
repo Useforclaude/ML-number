@@ -1,8 +1,34 @@
 # 🎯 NEXT SESSION GUIDE
 
-**Last Updated**: 2025-10-06 16:00 PM
-**Session**: 011B (Cell 4 Ultra-Fix - 5 Critical Errors)
+**Last Updated**: 2025-10-06 18:00 PM
+**Session**: 011C (GPU Conflict Fix - Ensemble Methods)
 **Status**: ✅ COMPLETED
+
+---
+
+## 🚨 LATEST FIX - Session 011C
+
+### ⚡ CatBoost GPU Conflict แก้ไขแล้ว!
+
+**Error ที่เจอ (Kaggle):**
+```
+CatBoostError: device already requested 0
+```
+
+**สาเหตุ:**
+- Ensemble methods (Stacking, Voting) ใช้ `n_jobs=-1`
+- สร้าง parallel processes หลายตัว
+- แต่ละ process พยายามใช้ GPU พร้อมกัน
+- CatBoost ไม่อนุญาต → Error!
+
+**แก้ไขแล้ว:**
+1. ✅ StackingRegressor: `n_jobs=-1` → `n_jobs=1`
+2. ✅ VotingRegressor: `n_jobs=-1` → `n_jobs=1`
+
+**ผลกระทบ:**
+- Ensemble phase: ช้าลง 10-15 นาที (ยังเร็วกว่า session ทั้งหมด)
+- Total training: ยัง ~9-12 ชม.
+- Reliability: 100% (ไม่มี GPU conflict)
 
 ---
 
@@ -264,7 +290,7 @@ If Kaggle training finished:
 
 ---
 
-## 📊 All Bugs Fixed Summary (19 Total)
+## 📊 All Bugs Fixed Summary (21 Total)
 
 ### Session 007 (OPTUNA Fixes):
 - [x] LightGBM early stopping removed
@@ -287,12 +313,16 @@ If Kaggle training finished:
 - [x] data_splitter.py line 81 - train distribution
 - [x] data_splitter.py line 82 - test distribution
 
-### Session 011B (Cell 4 Ultra-Fix): ⭐ NEW!
-- [x] **AdvancedPreprocessor parameters**
-- [x] **y target type (log → actual prices)**
-- [x] **Validation set missing**
-- [x] **y_train type (numpy → Series)**
-- [x] **results dict keys (best_r2_val → best_score)**
+### Session 011B (Cell 4 Ultra-Fix):
+- [x] AdvancedPreprocessor parameters
+- [x] y target type (log → actual prices)
+- [x] Validation set missing
+- [x] y_train type (numpy → Series)
+- [x] results dict keys (best_r2_val → best_score)
+
+### Session 011C (GPU Conflict Fix): ⭐ NEW!
+- [x] **StackingRegressor n_jobs conflict (model_utils.py:825)**
+- [x] **VotingRegressor n_jobs conflict (train.py:338)**
 
 ---
 
@@ -403,7 +433,7 @@ cat /storage/ML-number/PAPERSPACE_QUICK_START.md
 
 ---
 
-## 📝 Session 011 & 011B Files Created/Modified
+## 📝 Session 011, 011B, 011C Files Created/Modified
 
 ### Session 011 (Paperspace + data_splitter):
 - `PAPERSPACE_COMPLETE_GUIDE.md` (1040 lines - detailed guide)
@@ -412,14 +442,21 @@ cat /storage/ML-number/PAPERSPACE_QUICK_START.md
 
 ### Session 011B (Cell 4 Ultra-Fix):
 - `notebooks/paperspace_cell4_corrected.py` (corrected Cell 4)
-- `PAPERSPACE_QUICK_START.md` (⭐ NEW! - quick start guide)
+- `PAPERSPACE_QUICK_START.md` (⭐ quick start guide)
 - `NEXT_SESSION.md` (updated with all fixes)
 - `checkpoints/checkpoint_latest.json` (Session 011B complete)
+
+### Session 011C (GPU Conflict Fix): ⭐ LATEST!
+- `src/model_utils.py` (StackingRegressor n_jobs fix)
+- `src/train.py` (VotingRegressor n_jobs fix)
+- `NEXT_SESSION.md` (updated with GPU conflict fix)
 
 ### Git Commits:
 - `9130540` - Fix numpy array bugs in data_splitter.py
 - `bbb15e0` - Session 011B: Ultra-fix Cell 4 (5 errors)
 - `76ec067` - Add PAPERSPACE_QUICK_START.md
+- `5518763` - Update NEXT_SESSION.md reference
+- `ef12477` - Session 011C: Fix CatBoost GPU conflict
 - Pushed to: `main` branch
 
 ---
