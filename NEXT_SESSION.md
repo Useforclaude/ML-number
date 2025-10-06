@@ -1,24 +1,85 @@
 # 🎯 NEXT SESSION GUIDE
 
-**Last Updated**: 2025-10-06 15:30 PM
-**Session**: 011 (Paperspace Setup + data_splitter.py Fix)
+**Last Updated**: 2025-10-06 16:00 PM
+**Session**: 011B (Cell 4 Ultra-Fix - 5 Critical Errors)
 **Status**: ✅ COMPLETED
 
 ---
 
-## 🚨 CRITICAL UPDATE - Session 011
+## 🚨 ULTRA-CRITICAL UPDATE - Session 011B
 
-### ✅ All Bugs Fixed!
+### ⚠️ Cell 4 มี 5 Errors ร้ายแรง - แก้ไขทั้งหมดแล้ว!
 
-**Session 011 completed:**
-1. ✅ Paperspace setup guide created (1040 lines)
-2. ✅ All Jupyter notebook cells fixed (Cell 1-4)
-3. ✅ Fixed 4 numpy bugs in `data_splitter.py`
-4. ✅ Committed and pushed to GitHub (commit: 9130540)
+**Errors ที่พบและแก้ไข:**
+1. ✅ AdvancedPreprocessor parameters ผิด
+2. ✅ y ต้องเป็น actual prices ไม่ใช่ log
+3. ✅ ต้องแยก validation set
+4. ✅ y_train type ต้อง wrap pd.Series()
+5. ✅ results dict keys ผิด
 
 ---
 
-## 📋 What Was Fixed (Session 011)
+## 📋 5 Critical Errors ที่แก้ไข (Session 011B)
+
+### Error 1: AdvancedPreprocessor Parameters ❌
+```python
+# ❌ ผิด (เดิม):
+preprocessor = AdvancedPreprocessor(
+    remove_outliers=True,
+    outlier_threshold=3.0,
+    scaling_method='robust'
+)
+
+# ✅ ถูก:
+preprocessor = AdvancedPreprocessor()  # No parameters!
+```
+
+### Error 2: y Target Type ❌
+```python
+# ❌ ปัญหา:
+# create_all_features return y_log (log-transformed)
+# แต่ train_production_pipeline ต้องการ ACTUAL PRICES
+
+# ✅ แก้ไข:
+y_train = pd.Series(np.expm1(y_log_train))  # log → actual
+y_test = pd.Series(np.expm1(y_log_test))
+```
+
+### Error 3: Validation Set Missing ❌
+```python
+# ❌ ปัญหา:
+# train_production_pipeline ต้องการ X_val, y_val
+
+# ✅ แก้ไข:
+from src.data_splitter import create_validation_set
+X_tr, X_val, y_tr, y_val, sw_tr, sw_val = create_validation_set(
+    X_train, y_train, sw_train,
+    val_size=0.15,
+    random_state=42
+)
+```
+
+### Error 4: y_train Type for pd.qcut() ❌
+```python
+# ❌ ปัญหา:
+# np.expm1() return numpy array
+
+# ✅ แก้ไข:
+y_train = pd.Series(np.expm1(y_log_train))  # Wrap with Series
+```
+
+### Error 5: Results Dict Keys ❌
+```python
+# ❌ ผิด:
+print(f"R²: {results['best_r2_val']:.4f}")  # Key ไม่มี!
+
+# ✅ ถูก:
+print(f"R²: {results['best_score']:.4f}")  # Correct key
+```
+
+---
+
+## 📋 What Was Fixed (Session 011 - Previous)
 
 ### Bug: AttributeError in data_splitter.py
 ```python
@@ -34,33 +95,124 @@ Line 82:  print("   Test distribution:", pd.Series(test_bins).value_counts(...)
 
 ---
 
-## 🎯 NEXT STEPS (Choose Platform)
+## ✅ Corrected Cell 4 Code (Copy-Paste Ready)
 
-### Option 1: Continue on Paperspace (RECOMMENDED)
+**File**: `notebooks/paperspace_cell4_corrected.py`
 
-**Status**: ✅ All setup complete, bugs fixed, ready to train!
+```python
+# Cell 4: Full Training Pipeline - CORRECTED VERSION
 
-**Steps to run training:**
+import numpy as np
+import pandas as pd
+import time
+
+# Imports
+from src.features import create_all_features
+from src.data_splitter import split_data_stratified, create_validation_set
+from src.model_utils import AdvancedPreprocessor
+from src.train_production import train_production_pipeline
+
+print("="*80)
+print("🚀 FULL TRAINING PIPELINE (CORRECTED)")
+print("="*80)
+
+# STEP 1: Create Features
+print("\n📊 STEP 1: Feature Engineering...")
+X, y_log, sample_weights = create_all_features(df_cleaned)
+print(f"   ✅ Features: {X.shape[1]} features, {X.shape[0]} samples")
+
+# STEP 2: Split Train/Test
+print("\n📊 STEP 2: Train/Test Split...")
+X_train, X_test, y_log_train, y_log_test, sw_train, sw_test = split_data_stratified(
+    X, y_log, sample_weights,
+    test_size=0.2,
+    random_state=42
+)
+
+# STEP 3: Convert to Actual Prices (CRITICAL FIX!)
+print("\n📊 STEP 3: Converting to actual prices...")
+y_train = pd.Series(np.expm1(y_log_train))  # log → actual
+y_test = pd.Series(np.expm1(y_log_test))
+print(f"   ✅ Train prices: ฿{y_train.min():,.0f} - ฿{y_train.max():,.0f}")
+
+# STEP 4: Split Train/Validation (NEW!)
+print("\n📊 STEP 4: Creating validation set...")
+X_tr, X_val, y_tr, y_val, sw_tr, sw_val = create_validation_set(
+    X_train, y_train, sw_train,
+    val_size=0.15,
+    random_state=42
+)
+
+# STEP 5: Preprocessing (FIXED!)
+print("\n📊 STEP 5: Preprocessing...")
+preprocessor = AdvancedPreprocessor()  # ✅ No parameters
+X_tr_processed = preprocessor.fit_transform(X_tr)
+X_val_processed = preprocessor.transform(X_val)
+X_test_processed = preprocessor.transform(X_test)
+
+# Clean NaN/Inf
+for df in [X_tr_processed, X_val_processed, X_test_processed]:
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    if hasattr(df, 'median'):
+        df.fillna(df.median(), inplace=True)
+    else:
+        df.fillna(X_tr_processed.median(), inplace=True)
+
+print(f"   ✅ Processed: {X_tr_processed.shape[1]} features")
+
+# STEP 6: PRODUCTION TRAINING
+print("\n" + "="*80)
+print("🔥 STARTING PRODUCTION TRAINING")
+print("="*80)
+
+start_time = time.time()
+
+results = train_production_pipeline(
+    X_tr_processed, y_tr,  # ✅ Actual prices
+    X_val_processed, y_val,  # ✅ Actual prices
+    optimize=True,
+    n_trials=100,
+    use_gpu=True,
+    verbose=True
+)
+
+elapsed_hours = (time.time() - start_time) / 3600
+
+# FINAL RESULTS
+print("\n" + "="*80)
+print("✅ TRAINING COMPLETE!")
+print("="*80)
+print(f"⏱️  Time: {elapsed_hours:.2f} hours")
+print(f"🏆 Best Model: {results['best_model_name']}")
+print(f"📊 Best R²: {results['best_score']:.4f}")  # ✅ Correct key
+print(f"📉 MAE: {results['best_mae']:.2f}")
+print(f"📉 RMSE: {results['best_rmse']:.2f}")
+print("="*80)
+```
+
+---
+
+## 🎯 NEXT STEPS (Paperspace)
+
+### Steps to Apply Fix:
 
 ```bash
 # 1. Pull latest fixes from GitHub
 cd /storage/ML-number
 git pull origin main
 
-# Expected output:
-# Updating 3aaad81..9130540
-# Fast-forward
-#  src/data_splitter.py | 4 ++--
-#  1 file changed, 4 insertions(+), 4 deletions(-)
+# Expected: notebooks/paperspace_cell4_corrected.py added
 ```
 
 **Then in Jupyter Notebook:**
 
-1. **Restart Kernel**: Kernel → Restart Kernel
-2. **Run Cell 1**: Environment setup (10 seconds)
-3. **Run Cell 2**: Load data (5 seconds)
-4. **Run Cell 3**: GPU check (5 seconds)
-5. **Run Cell 4**: Full training pipeline (~9-12 hours)
+1. **Delete old Cell 4** (has 5 errors)
+2. **Create new Cell 4**
+3. **Copy code** from `notebooks/paperspace_cell4_corrected.py`
+4. **OR copy** from NEXT_SESSION.md above
+5. **Restart Kernel**: Kernel → Restart Kernel
+6. **Run Cells 1-3**: Verify setup (20 seconds)
+7. **Run Cell 4**: Start training (~9-12 hours)
 
 **Expected Output (Cell 4):**
 ```
@@ -112,7 +264,7 @@ If Kaggle training finished:
 
 ---
 
-## 📊 All Bugs Fixed Summary (14 Total)
+## 📊 All Bugs Fixed Summary (19 Total)
 
 ### Session 007 (OPTUNA Fixes):
 - [x] LightGBM early stopping removed
@@ -129,11 +281,18 @@ If Kaggle training finished:
 - [x] GPU test verbose=False removed
 - [x] LightGBM n_jobs=1 (was -1)
 
-### Session 011 (Paperspace + numpy bugs): ⭐ NEW!
-- [x] **data_splitter.py line 47 - bin_counts**
-- [x] **data_splitter.py line 50 - price_range**
-- [x] **data_splitter.py line 81 - train distribution**
-- [x] **data_splitter.py line 82 - test distribution**
+### Session 011 (Paperspace + data_splitter):
+- [x] data_splitter.py line 47 - bin_counts
+- [x] data_splitter.py line 50 - price_range
+- [x] data_splitter.py line 81 - train distribution
+- [x] data_splitter.py line 82 - test distribution
+
+### Session 011B (Cell 4 Ultra-Fix): ⭐ NEW!
+- [x] **AdvancedPreprocessor parameters**
+- [x] **y target type (log → actual prices)**
+- [x] **Validation set missing**
+- [x] **y_train type (numpy → Series)**
+- [x] **results dict keys (best_r2_val → best_score)**
 
 ---
 
