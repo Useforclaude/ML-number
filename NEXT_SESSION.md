@@ -1,12 +1,44 @@
 # 🎯 NEXT SESSION GUIDE
 
-**Last Updated**: 2025-10-06 18:00 PM
-**Session**: 011C (GPU Conflict Fix - Ensemble Methods)
+**Last Updated**: 2025-10-06 21:25 PM
+**Session**: 011D (scikit-learn 1.7 API Fix)
 **Status**: ✅ COMPLETED
 
 ---
 
-## 🚨 LATEST FIX - Session 011C
+## 🚨 LATEST FIX - Session 011D
+
+### ⚡ scikit-learn 1.7 API Compatibility แก้ไขแล้ว!
+
+**Error ที่เจอ (Kaggle):**
+```
+TypeError: got an unexpected keyword argument 'fit_params'
+```
+
+**สาเหตุ:**
+- Kaggle อัปเกรดเป็น scikit-learn 1.7.0
+- API เปลี่ยนจาก `fit_params` → `params` ใน `cross_val_score()`
+- Code เราใช้ `fit_params` แบบเก่า
+- Breaking change ไม่มี deprecation warning
+
+**แก้ไขแล้ว:**
+1. ✅ model_utils.py: 4 ตำแหน่ง (XGBoost, LightGBM, CatBoost, RF)
+2. ✅ evaluate.py: 1 ตำแหน่ง
+
+**Package ใหม่:**
+- `packages/kaggle/number-ML-kaggle-SKLEARN17-FIX-20251006.zip`
+
+**ผลกระทบ:**
+- ไม่มีผลต่อ performance
+- แก้ error ที่ทำให้ training ไม่รัน
+- ใช้ได้กับ scikit-learn >= 1.7
+
+**Git Commit:**
+- `b626090` - Session 011D: Fix scikit-learn 1.7 API compatibility
+
+---
+
+## 🚨 Session 011C - GPU Conflict Fix
 
 ### ⚡ CatBoost GPU Conflict แก้ไขแล้ว!
 
