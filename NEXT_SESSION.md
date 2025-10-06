@@ -366,6 +366,30 @@ ls -lh /storage/ML-number/data/raw/numberdata.csv
 - ✅ All bugs fixed
 - ✅ Code pushed to GitHub
 
+---
+
+## 📚 Paperspace Complete Guide (ใหม่!)
+
+**ถ้างง หรือ ลืมขั้นตอน → อ่านไฟล์นี้:**
+
+📖 **`PAPERSPACE_QUICK_START.md`**
+- ขั้นตอนครบทั้งหมด (10 steps)
+- Login → Setup → Training → Download results
+- Commands copy-paste ได้เลย
+- Troubleshooting ปัญหาทั่วไป
+- Timeline คาดการณ์
+
+**Quick Access:**
+```bash
+# View in terminal
+cat /storage/ML-number/PAPERSPACE_QUICK_START.md
+
+# Or view in Jupyter Lab
+# File Browser → PAPERSPACE_QUICK_START.md → Double-click
+```
+
+---
+
 **What to do NOW:**
 
 1. **Pull updates**: `cd /storage/ML-number && git pull origin main`
@@ -375,22 +399,27 @@ ls -lh /storage/ML-number/data/raw/numberdata.csv
 5. **Wait**: ~9-12 hours for completion
 6. **Save**: Download models and results
 
+**ถ้างง**: อ่าน `PAPERSPACE_QUICK_START.md` ทุกอย่างอยู่ในนั้น!
+
 ---
 
-## 📝 Session 011 Files Created/Modified
+## 📝 Session 011 & 011B Files Created/Modified
 
-### Created:
-- `PAPERSPACE_COMPLETE_GUIDE.md` (1040 lines)
+### Session 011 (Paperspace + data_splitter):
+- `PAPERSPACE_COMPLETE_GUIDE.md` (1040 lines - detailed guide)
 - `paperspace_quickstart.py` (auto-fix script)
+- `src/data_splitter.py` (4 numpy bugs fixed)
 
-### Modified:
-- `src/data_splitter.py` (4 fixes)
-- `checkpoints/checkpoint_latest.json` (updated)
-- `NEXT_SESSION.md` (this file)
+### Session 011B (Cell 4 Ultra-Fix):
+- `notebooks/paperspace_cell4_corrected.py` (corrected Cell 4)
+- `PAPERSPACE_QUICK_START.md` (⭐ NEW! - quick start guide)
+- `NEXT_SESSION.md` (updated with all fixes)
+- `checkpoints/checkpoint_latest.json` (Session 011B complete)
 
-### Git:
-- Commit: `9130540`
-- Message: "Fix numpy array bugs in data_splitter.py - add pd.Series() wrappers"
+### Git Commits:
+- `9130540` - Fix numpy array bugs in data_splitter.py
+- `bbb15e0` - Session 011B: Ultra-fix Cell 4 (5 errors)
+- `76ec067` - Add PAPERSPACE_QUICK_START.md
 - Pushed to: `main` branch
 
 ---
