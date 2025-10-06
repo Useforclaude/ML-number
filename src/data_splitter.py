@@ -44,10 +44,10 @@ def split_data_stratified(X, y, sample_weights=None, test_size=0.2, random_state
     print(f"\n📊 Creating {n_bins} stratification bins based on price")
     
     # Show bin distribution
-    bin_counts = y_bins.value_counts().sort_index()
+    bin_counts = pd.Series(y_bins).value_counts().sort_index()
     print("\n📈 Price bin distribution:")
     for bin_idx, count in bin_counts.items():
-        price_range = np.expm1(y[y_bins == bin_idx].quantile([0, 1]))
+        price_range = np.expm1(pd.Series(y[y_bins == bin_idx]).quantile([0, 1]))
         print(f"   Bin {bin_idx}: {count:,} samples (฿{price_range[0]:,.0f} - ฿{price_range[1]:,.0f})")
     
     # Split with stratification
@@ -78,8 +78,8 @@ def split_data_stratified(X, y, sample_weights=None, test_size=0.2, random_state
     test_bins = pd.qcut(y_test, q=n_bins, labels=False, duplicates='drop')
     
     print("\n📊 Stratification check:")
-    print("   Train distribution:", train_bins.value_counts(normalize=True).sort_index().values)
-    print("   Test distribution:", test_bins.value_counts(normalize=True).sort_index().values)
+    print("   Train distribution:", pd.Series(train_bins).value_counts(normalize=True).sort_index().values)
+    print("   Test distribution:", pd.Series(test_bins).value_counts(normalize=True).sort_index().values)
     
     # Price range check
     print(f"\n💰 Price ranges:")
