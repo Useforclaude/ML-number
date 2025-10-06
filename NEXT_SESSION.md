@@ -6,20 +6,30 @@
 
 ---
 
-## 🚨 SESSION 011F - R² Fix (0.4 → >0.92) ⭐ CRITICAL!
+## 🚨 SESSION 011F - R² Fix (Multiple Critical Issues) ⭐ CRITICAL!
 
 ### 📊 Problems Identified:
 
-**Kaggle R² = 0.4 (Should be >0.85)**
+**Issue 1: Kaggle R² = 0.4 (Should be >0.85)** ✅ FIXED
 - **Root Cause**: `fillna(0)` in Cell 11
 - Features lost information → Model couldn't learn
 - Sequence scores became 0 → Model thought 12345678 = cheap (wrong!)
+- **Fix**: Changed to `fillna(median())`
 
-**Paperspace R² = 0.0006 (Almost zero!)**
-- **Root Cause**: XGBoost version mismatch
-- Paperspace: XGBoost 1.x (uses `tree_method='gpu_hist'`)
-- Code: Uses modern syntax `device='cuda'` (XGBoost 2.0+)
-- Result: GPU params ignored → CPU mode → Wrong optimization
+**Issue 2: Paperspace R² = -0.20 (Negative!)** 🚨 DATA ISSUE!
+- **Root Cause 1**: XGBoost version mismatch ✅ FIXED
+  - Paperspace: XGBoost 1.x (uses `tree_method='gpu_hist'`)
+  - Code: Uses modern syntax `device='cuda'` (XGBoost 2.0+)
+  - Result: GPU params ignored → CPU mode → Wrong optimization
+  - **Fix**: Added XGBoost version auto-detection
+
+- **Root Cause 2**: DATA DISTRIBUTION PROBLEM ⚠️ **MOST CRITICAL!**
+  - **51% of data < ฿1,000** (unrealistic - Thai numbers don't sell for ฿100-900)
+  - Median = ฿900 (half the data is extremely cheap)
+  - Min = ฿100 (data entry errors)
+  - Max = ฿1,004,999 (extreme outlier)
+  - Model learns "everything is cheap" → Fails on expensive numbers
+  - **Fix**: Filter data to 1k-500k range (keeps ~2,900 samples)
 
 ### ✅ Fixes Applied:
 
