@@ -73,17 +73,21 @@ def clean_phone_number(phone):
 # ====================================================================================
 # MAIN DATA LOADING FUNCTION
 # ====================================================================================
-def load_and_clean_data(file_path=None, auto_clean=True):
+def load_and_clean_data(file_path=None, auto_clean=True, filter_outliers_param=True, max_price=100000):
     """
     โหลดและทำความสะอาดข้อมูลเบอร์โทรศัพท์
-    
+
     Parameters:
     -----------
     file_path : str, optional
         Path to data file. If None, will look for files in data/raw/
     auto_clean : bool
         Whether to automatically clean the data
-    
+    filter_outliers_param : bool
+        Whether to filter price outliers (≥100k)
+    max_price : int
+        Maximum price threshold for filtering (default: 100,000)
+
     Returns:
     --------
     df_raw : pd.DataFrame
@@ -217,16 +221,21 @@ def load_and_clean_data(file_path=None, auto_clean=True):
     
     # Reset index
     df_cleaned = df_cleaned.reset_index(drop=True)
-    
+
+    # Filter outliers if requested (NEW - Session 012)
+    if filter_outliers_param:
+        from src.data_filter import filter_outliers
+        df_cleaned = filter_outliers(df_cleaned, max_price=max_price, verbose=True)
+
     # Save cleaned data
     cleaned_path = os.path.join(DATA_PATH, 'processed', 'cleaned_data.csv')
     os.makedirs(os.path.dirname(cleaned_path), exist_ok=True)
     df_cleaned.to_csv(cleaned_path, index=False)
     print(f"\n💾 Saved cleaned data to: {cleaned_path}")
-    
+
     print("\n✅ Data loading and cleaning completed!")
     print("="*100)
-    
+
     return df_raw, df_cleaned
 
 # ====================================================================================
