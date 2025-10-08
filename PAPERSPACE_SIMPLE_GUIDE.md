@@ -1328,8 +1328,29 @@ gdown YOUR_FILE_ID
 ```
 
 **ตัวอย่างจริง:**
+
 ```bash
+# ตัวอย่าง 1: Download วิดีโอ (MP4)
 gdown --fuzzy "https://drive.google.com/file/d/1ZvlVweCL_KqGQWiAOw9-VSjZbol9n-tw/view?usp=drive_link"
+
+# ตัวอย่าง 2: Download ไฟล์เสียง (MP3/WAV)
+gdown --fuzzy "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz123456/view?usp=drive_link"
+
+# ตัวอย่าง 3: Download dataset (ZIP)
+gdown --fuzzy "https://drive.google.com/file/d/1XyZ987654321aBcDeFgHiJkLmNoPqRsT/view?usp=drive_link"
+
+# ตัวอย่าง 4: Download model weights (PKL/PT)
+gdown --fuzzy "https://drive.google.com/file/d/1MoDeLWeIgHtS123456789AbCdEfGhIjK/view?usp=drive_link"
+```
+
+**หรือใช้ File ID อย่างเดียว (สั้นกว่า):**
+
+```bash
+# แบบย่อ (ใช้เฉพาะ File ID)
+gdown 1ZvlVweCL_KqGQWiAOw9-VSjZbol9n-tw
+gdown 1AbCdEfGhIjKlMnOpQrStUvWxYz123456
+gdown 1XyZ987654321aBcDeFgHiJkLmNoPqRsT
+gdown 1MoDeLWeIgHtS123456789AbCdEfGhIjK
 ```
 
 **Progress:**
