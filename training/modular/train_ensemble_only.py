@@ -108,7 +108,11 @@ def main():
     logger.info("="*80)
 
     try:
-        df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
+        df_raw, df_cleaned = load_and_clean_data(
+            file_path='/notebooks/ML-number/data/raw/numberdata.csv',
+            filter_outliers_param=True,
+            max_price=100000
+        )
         logger.info(f"✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows")
         X, y_log, sample_weights = create_all_features(df_cleaned)
 
