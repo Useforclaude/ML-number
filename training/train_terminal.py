@@ -34,10 +34,11 @@ try:
     from src.config import BASE_PATH, MODEL_CONFIG
     from src.environment import detect_environment, setup_base_path
     from src.data_handler import load_and_clean_data
-    from src.features import create_all_features
-    from src.data_splitter import split_data_stratified, create_validation_set
+    from src.data_splitter import create_validation_set
     from src.model_utils import AdvancedPreprocessor
     from src.train_production import train_production_pipeline
+    from training.main import run_feature_pipeline
+    from sklearn.model_selection import train_test_split
     import numpy as np
     import pandas as pd
     import torch
@@ -96,37 +97,49 @@ def main():
         logger.error(f"❌ Failed to load data: {e}")
         return 1
 
-    # Step 2: Feature engineering
+    # Step 2: Feature engineering + stratified split (no leakage)
     logger.info("\n" + "="*80)
     logger.info("STEP 2: Feature Engineering")
     logger.info("="*80)
 
     try:
-        X, y_log, sample_weights = create_all_features(df_cleaned)
-        logger.info(f"✅ Features created: {X.shape[1]} features, {X.shape[0]} samples")
-    except Exception as e:
-        logger.error(f"❌ Failed to create features: {e}")
-        return 1
-
-    # Step 3: Split data
-    logger.info("\n" + "="*80)
-    logger.info("STEP 3: Train/Test Split")
-    logger.info("="*80)
-
-    try:
-        X_train, X_test, y_log_train, y_log_test, sw_train, sw_test = split_data_stratified(
-            X, y_log, sample_weights,
-            test_size=0.2,
-            random_state=42
+        price_bins = pd.qcut(
+            df_cleaned['price'],
+            q=5,
+            labels=False,
+            duplicates='drop'
         )
-        logger.info(f"✅ Split complete: Train={len(X_train)}, Test={len(X_test)}")
+        train_indices, test_indices = train_test_split(
+            np.arange(len(df_cleaned)),
+            test_size=MODEL_CONFIG.get('test_size', 0.2),
+            stratify=price_bins,
+            random_state=MODEL_CONFIG.get('random_state', 42)
+        )
+
+        X, y_log, sample_weights = run_feature_pipeline(
+            df_cleaned,
+            train_indices=train_indices
+        )
+        sample_weights = pd.Series(sample_weights, index=X.index)
+
+        X_train = X.iloc[train_indices]
+        X_test = X.iloc[test_indices]
+        y_log_train = y_log.iloc[train_indices]
+        y_log_test = y_log.iloc[test_indices]
+        sw_train = sample_weights.iloc[train_indices]
+        sw_test = sample_weights.iloc[test_indices]
+
+        logger.info(
+            "✅ Features created with stratified indices: "
+            f"{X.shape[1]} features | Train={len(X_train)} | Test={len(X_test)}"
+        )
     except Exception as e:
-        logger.error(f"❌ Failed to split data: {e}")
+        logger.error(f"❌ Failed to prepare features and splits: {e}")
         return 1
 
-    # Step 4: Convert to actual prices
+    # Step 3: Convert to actual prices
     logger.info("\n" + "="*80)
-    logger.info("STEP 4: Converting to Actual Prices")
+    logger.info("STEP 3: Converting to Actual Prices")
     logger.info("="*80)
 
     y_train = pd.Series(np.expm1(y_log_train))
@@ -134,9 +147,9 @@ def main():
     logger.info(f"✅ Train prices: ฿{y_train.min():,.0f} - ฿{y_train.max():,.0f}")
     logger.info(f"✅ Test prices: ฿{y_test.min():,.0f} - ฿{y_test.max():,.0f}")
 
-    # Step 5: Create validation set
+    # Step 4: Create validation set
     logger.info("\n" + "="*80)
-    logger.info("STEP 5: Creating Validation Set")
+    logger.info("STEP 4: Creating Validation Set")
     logger.info("="*80)
 
     try:
@@ -150,9 +163,9 @@ def main():
         logger.error(f"❌ Failed to create validation set: {e}")
         return 1
 
-    # Step 6: Preprocessing
+    # Step 5: Preprocessing
     logger.info("\n" + "="*80)
-    logger.info("STEP 6: Preprocessing")
+    logger.info("STEP 5: Preprocessing")
     logger.info("="*80)
 
     try:
@@ -174,9 +187,9 @@ def main():
         logger.error(f"❌ Failed to preprocess: {e}")
         return 1
 
-    # Step 7: PRODUCTION TRAINING
+    # Step 6: PRODUCTION TRAINING
     logger.info("\n" + "="*80)
-    logger.info("🔥 STEP 7: PRODUCTION TRAINING")
+    logger.info("🔥 STEP 6: PRODUCTION TRAINING")
     logger.info("="*80)
     logger.info(f"⏱️  Expected duration: 9-12 hours")
     logger.info(f"🎯 Optimization trials: {MODEL_CONFIG.get('optuna_trials', 100)}")

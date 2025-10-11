@@ -35,9 +35,10 @@ try:
     from src.config import BASE_PATH
     from src.environment import detect_environment
     from src.data_handler import load_and_clean_data
-    from src.features import create_all_features
-    from src.data_splitter import split_data_stratified, create_validation_set
+    from src.data_splitter import create_validation_set
     from src.model_utils import AdvancedPreprocessor
+    from training.main import run_feature_pipeline
+    from sklearn.model_selection import train_test_split
     import numpy as np
     import pandas as pd
     from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
@@ -114,11 +115,31 @@ def main():
             max_price=100000
         )
         logger.info(f"✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows")
-        X, y_log, sample_weights = create_all_features(df_cleaned)
-
-        X_train, X_test, y_log_train, y_log_test, sw_train, sw_test = split_data_stratified(
-            X, y_log, sample_weights, test_size=0.2, random_state=42
+        price_bins = pd.qcut(
+            df_cleaned['price'],
+            q=5,
+            labels=False,
+            duplicates='drop'
         )
+        train_indices, test_indices = train_test_split(
+            np.arange(len(df_cleaned)),
+            test_size=0.2,
+            stratify=price_bins,
+            random_state=42
+        )
+
+        X, y_log, sample_weights = run_feature_pipeline(
+            df_cleaned,
+            train_indices=train_indices
+        )
+        sample_weights = pd.Series(sample_weights, index=X.index)
+
+        X_train = X.iloc[train_indices]
+        X_test = X.iloc[test_indices]
+        y_log_train = y_log.iloc[train_indices]
+        y_log_test = y_log.iloc[test_indices]
+        sw_train = sample_weights.iloc[train_indices]
+        sw_test = sample_weights.iloc[test_indices]
 
         y_train = pd.Series(np.expm1(y_log_train))
         y_test = pd.Series(np.expm1(y_log_test))
