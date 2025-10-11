@@ -1782,13 +1782,19 @@ def create_masterpiece_features(df, market_stats=None):
     # Drop phone_number column if it exists
     if 'phone_number' in df.columns:
         df = df.drop('phone_number', axis=1)
-    
+
     # Drop price column if it exists (for feature creation)
     if 'price' in df.columns:
         df = df.drop('price', axis=1)
-    
+
+    # 🔴 CRITICAL: Drop sample_weight (causes data leakage!)
+    # sample_weight is calculated from price → must NOT be a feature
+    if 'sample_weight' in df.columns:
+        df = df.drop('sample_weight', axis=1)
+        print("   ⚠️  Removed 'sample_weight' feature (data leakage prevention)")
+
     print(f"\n✅ Created {len(df.columns)} features successfully!")
-    
+
     return df
 
 # ====================================================================================
