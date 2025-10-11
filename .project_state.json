@@ -1,9 +1,9 @@
 {
   "project_name": "ML Phone Number Price Prediction",
-  "version": "4.1.0",
-  "last_updated": "2025-10-11T16:34:09+07:00",
-  "session_id": "session_013",
-  "parent_session": "session_012",
+  "version": "4.2.0",
+  "last_updated": "2025-10-11T18:15:00+07:00",
+  "session_id": "session_014",
+  "parent_session": "session_013",
   "progress": {
     "environment_setup": {
       "status": "completed",
@@ -65,8 +65,11 @@
       "local": "completed",
       "colab": "completed",
       "kaggle": "ready_to_deploy",
-      "paperspace": "ready_to_deploy",
-      "paperspace_pro": "ready_to_deploy"
+      "paperspace": "deployed_and_ready",
+      "paperspace_pro": "ready_to_deploy",
+      "paperspace_path": "/notebooks/ML-number",
+      "paperspace_base_path": "/storage/number-ML",
+      "paperspace_persistent": true
     },
     "training": {
       "status": "ready_to_start",
@@ -92,10 +95,19 @@
     }
   },
   "environment": {
-    "current": "local",
-    "base_path": "/home/u-and-an/projects/number-ML",
-    "python_version": "3.12",
-    "venv_path": ".venv"
+    "current": "paperspace",
+    "local": {
+      "base_path": "/home/u-and-an/projects/number-ML",
+      "python_version": "3.12",
+      "venv_path": ".venv"
+    },
+    "paperspace": {
+      "base_path": "/notebooks/ML-number",
+      "storage_path": "/storage/number-ML",
+      "venv_path": "/notebooks/ML-number/.venv",
+      "persistent": true,
+      "git_synced": true
+    }
   },
   "data": {
     "raw_file": "data/raw/numberdata.csv",
@@ -154,10 +166,18 @@
     "✅ Verified all scripts now use filtered data correctly",
     "✅ Updated checkpoints/checkpoint_latest.json (Session 013)",
     "✅ Updated NEXT_SESSION.md with Codex fix details",
-    "✅ All tuple unpacking bugs FIXED - Training guaranteed to work!"
+    "✅ All tuple unpacking bugs FIXED - Training guaranteed to work!",
+    "✅ SESSION 014 - PAPERSPACE DEPLOYMENT:",
+    "✅ Committed and pushed all changes to GitHub (commit 40a9e65)",
+    "✅ Git cloned to Paperspace: /notebooks/ML-number",
+    "✅ Created virtual environment on Paperspace",
+    "✅ Installed all requirements successfully",
+    "✅ Verified imports work correctly on Paperspace",
+    "✅ BASE_PATH auto-detected: /storage/number-ML",
+    "✅ Created logs directory for training monitoring"
   ],
   "tasks_pending": [
-    "Upload code to Paperspace/Kaggle",
+    "Upload data file (data/raw/numberdata.csv) to Paperspace",
     "Run modular training (8-11 hours total)",
     "Monitor training progress",
     "Verify R² > 0.90 achievement",
@@ -195,7 +215,8 @@
     "session_011e": "Universal sklearn compatibility",
     "session_011f": "R² fixes (fillna + XGBoost version)",
     "session_012": "Data filtering + Modular training scripts",
-    "session_013": "CODEX FIX - Tuple unpacking bug (6 training scripts)"
+    "session_013": "CODEX FIX - Tuple unpacking bug (6 training scripts)",
+    "session_014": "Paperspace deployment - Git clone, venv setup, imports verified"
   },
   "all_bugs_fixed_count": 22,
   "file_summary": {
@@ -227,15 +248,32 @@
       "NEXT_SESSION.md (Codex fix documentation)",
       ".project_state.json (updated to v4.1.0)"
     ],
-    "total_changes_session_013": 9
+    "total_changes_session_013": 9,
+    "session_014_deployment": {
+      "platform": "Paperspace",
+      "path": "/notebooks/ML-number",
+      "git_commit": "40a9e65",
+      "setup_complete": true,
+      "imports_verified": true,
+      "ready_for_training": true
+    }
   },
   "next_session_quickstart": {
-    "step_1": "cd /storage/ML-number && git pull origin main",
-    "step_2": "source .venv/bin/activate",
-    "step_3": "nohup python training/modular/train_xgboost_only.py > logs/xgb.log 2>&1 &",
-    "step_4": "Continue with other models...",
-    "step_5": "python training/modular/train_ensemble_only.py (final)",
-    "note": "Paths updated! Scripts now in training/modular/ folder"
+    "paperspace": {
+      "step_1": "cd /notebooks/ML-number",
+      "step_2": "source .venv/bin/activate",
+      "step_3": "Upload data/raw/numberdata.csv to Paperspace",
+      "step_4": "nohup python training/modular/train_xgboost_only.py > logs/xgb.log 2>&1 &",
+      "step_5": "Continue with other models...",
+      "step_6": "python training/modular/train_ensemble_only.py (final)",
+      "note": "Paperspace path: /notebooks/ML-number (persistent across sessions)"
+    },
+    "local": {
+      "step_1": "cd /home/u-and-an/projects/number-ML",
+      "step_2": "source .venv/bin/activate",
+      "step_3": "python training/modular/train_xgboost_only.py",
+      "note": "Scripts now in training/modular/ folder"
+    }
   },
   "session_013_critical_fix": {
     "bug": "Training scripts received tuple but unpacked as single value",
