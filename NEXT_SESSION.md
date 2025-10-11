@@ -71,7 +71,22 @@ scp /home/u-and-an/projects/number-ML/data/raw/numberdata.csv \
     root@paperspace:/notebooks/ML-number/data/raw/
 ```
 
-### **Step 2: Verify Setup** ✅
+### **Step 2: Install PyTorch (ครั้งแรกเท่านั้น!)** 🔧
+
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# Install PyTorch (required for GPU detection)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Verify installation
+python -c "import torch; print(f'✅ PyTorch {torch.__version__} installed')"
+```
+
+**Note**: ต้องทำครั้งเดียวตอนแรก! Session ถัดไปไม่ต้องติดตั้งอีก
+
+### **Step 3: Verify Setup** ✅
 
 ```bash
 # Activate venv

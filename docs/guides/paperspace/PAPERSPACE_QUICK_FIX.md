@@ -1,6 +1,37 @@
 # 🚨 Paperspace Quick Fix Guide
 
-## Error 1: IndentationError in Python -c
+## Error 1: No module named 'torch' (MOST COMMON!)
+
+**Problem:**
+```
+ERROR - Import error: No module named 'torch'
+2025-10-11 11:57:01,056 - ERROR - Make sure virtual environment is activated: source .venv/bin/activate
+```
+
+**Cause:** PyTorch not installed in virtual environment
+
+**Solution (REQUIRED - ต้องทำครั้งแรก!):**
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# Install PyTorch (CPU version for Paperspace)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Verify installation
+python -c "import torch; print(f'✅ PyTorch {torch.__version__} installed')"
+
+# Expected output:
+# ✅ PyTorch 2.x.x installed
+```
+
+**Why needed:** Training scripts use PyTorch to detect GPU availability
+
+**Note:** ต้องทำครั้งเดียวตอนแรก! Session ถัดไปไม่ต้องติดตั้งอีก
+
+---
+
+## Error 2: IndentationError in Python -c
 
 **Problem:**
 ```bash

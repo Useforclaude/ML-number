@@ -14,6 +14,27 @@
 
 ---
 
+## 🔧 เตรียมพร้อมก่อนเริ่ม (ครั้งแรกเท่านั้น)
+
+### **ติดตั้ง PyTorch (ต้องทำครั้งแรก!):**
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# ติดตั้ง PyTorch (CPU version - สำหรับ Paperspace)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# หรือถ้ามี GPU (M4000/P5000):
+# pip install torch torchvision torchaudio
+
+# Verify installation
+python -c "import torch; print(f'✅ PyTorch {torch.__version__} installed')"
+```
+
+**ต้องทำครั้งเดียวตอนแรก! หลังจากนั้นไม่ต้องติดตั้งอีก**
+
+---
+
 ## 🚀 คำสั่งสำหรับแต่ละโมเดล
 
 ### **เตรียมตัวก่อนทุกครั้ง:**
@@ -335,6 +356,74 @@ python training/modular/train_ensemble_only.py 2>&1 | tee logs/ensemble.log
 
 ---
 
+---
+
+## 🔧 Troubleshooting (แก้ปัญหาที่พบบ่อย)
+
+### **Error 1: No module named 'torch'**
+```
+ERROR - Import error: No module named 'torch'
+```
+
+**Solution:**
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+python -c "import torch; print('✅ PyTorch installed')"
+```
+
+### **Error 2: FileNotFoundError - Data file not found**
+```
+FileNotFoundError: ❌ ไม่พบไฟล์ข้อมูล!
+```
+
+**Solution:**
+```bash
+# Check if data file exists
+ls -lh /notebooks/ML-number/data/raw/numberdata.csv
+
+# If missing, upload it via Paperspace web UI
+# Or check the path in training script is correct
+```
+
+### **Error 3: Virtual environment not activated**
+```
+Command 'python' not found
+```
+
+**Solution:**
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+# Now (.venv) should appear in prompt
+```
+
+### **Error 4: Out of memory**
+```
+MemoryError or Killed
+```
+
+**Solution:**
+- Reduce n_trials in training script (100 → 50)
+- Train one model at a time (not parallel)
+- Restart Paperspace session
+
+### **Error 5: Git pull conflicts**
+```
+error: Your local changes would be overwritten
+```
+
+**Solution:**
+```bash
+git stash
+git pull origin main
+git stash pop
+```
+
+---
+
 **Created**: 2025-10-11
+**Updated**: 2025-10-11 (Added PyTorch installation + Troubleshooting)
 **Purpose**: คำสั่งรันทีละโมเดลสำหรับ Paperspace
 **Status**: Ready to use ✅
