@@ -93,23 +93,73 @@ print(f'✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows'
 
 ### **Step 3: Start Training** 🚀
 
+**⚠️ IMPORTANT: Paperspace Free = 6-hour auto-shutdown!**
+- Must run **sequentially** (one by one), NOT parallel
+- Split into 3 sessions to avoid timeout
+- See: `docs/guides/paperspace/PAPERSPACE_6HR_TRAINING_STRATEGY.md`
+
+#### **SESSION 1: Fast Models (~5 hours)**
 ```bash
-# Make sure you're in venv
 cd /notebooks/ML-number
 source .venv/bin/activate
 
-# Run models in background (no timeout!)
-nohup python training/modular/train_xgboost_only.py > logs/xgb.log 2>&1 &
-nohup python training/modular/train_lightgbm_only.py > logs/lgb.log 2>&1 &
-nohup python training/modular/train_catboost_only.py > logs/cat.log 2>&1 &
-nohup python training/modular/train_rf_only.py > logs/rf.log 2>&1 &
+# Run ONE by ONE (sequential, not parallel!)
+echo "=== SESSION 1: Fast Models ==="
 
-# Monitor first model
-tail -f logs/xgb.log
+# Step 1: XGBoost (2-3h)
+python training/modular/train_xgboost_only.py 2>&1 | tee logs/xgb.log
 
-# Verify data loading (CRITICAL CHECK!)
+# Step 2: CatBoost (1-2h)
+python training/modular/train_catboost_only.py 2>&1 | tee logs/cat.log
+
+# Step 3: RandomForest (1h)
+python training/modular/train_rf_only.py 2>&1 | tee logs/rf.log
+
+echo "✅ SESSION 1 COMPLETE!"
+ls -lh models/checkpoints/
+```
+
+**Verify Data Loading (CRITICAL!):**
+```bash
 grep "Data loaded" logs/*.log
 # Expected: "✅ Data loaded: raw=6112 rows, cleaned=6100 rows"
+```
+
+#### **SESSION 2: Slow Model (~4 hours)**
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# Verify Session 1 checkpoints
+ls -lh models/checkpoints/xgboost_checkpoint.pkl
+ls -lh models/checkpoints/catboost_checkpoint.pkl
+ls -lh models/checkpoints/random_forest_checkpoint.pkl
+
+echo "=== SESSION 2: Slow Model ==="
+
+# LightGBM (3-4h - longest model)
+python training/modular/train_lightgbm_only.py 2>&1 | tee logs/lgb.log
+
+echo "✅ SESSION 2 COMPLETE!"
+ls -lh models/checkpoints/
+```
+
+#### **SESSION 3: Ensemble (~30 minutes)**
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# Verify ALL 4 checkpoints exist
+ls -lh models/checkpoints/*.pkl
+# Should show 4 files
+
+echo "=== SESSION 3: Ensemble ==="
+
+# Create ensemble (15-30 min)
+python training/modular/train_ensemble_only.py 2>&1 | tee logs/ensemble.log
+
+echo "✅ ALL TRAINING COMPLETE!"
+ls -lh models/deployed/best_model.pkl
 ```
 
 ### **Step 4: Monitor Training** 👀
@@ -353,20 +403,19 @@ ls -lh models/deployed/
 
 ## 🎯 Session 015 Quick Start (Copy-Paste)
 
+### **⚠️ IMPORTANT: Paperspace = 6-hour limit!**
+Run sequentially, split into 3 sessions:
+
+#### **SESSION 1 (Copy-Paste - 5 hours):**
 ```bash
-# === SESSION 015: START TRAINING ===
-
-# Step 1: Navigate to project
+# === SESSION 015A: FAST MODELS ===
 cd /notebooks/ML-number
-
-# Step 2: Activate venv
 source .venv/bin/activate
 
-# Step 3: Verify data file exists
+# Verify data file
 ls -lh data/raw/numberdata.csv
-# If missing, upload it first!
 
-# Step 4: Test data loading (CRITICAL!)
+# Test data loading (CRITICAL!)
 python -c "
 from src.data_handler import load_and_clean_data
 df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
@@ -374,20 +423,49 @@ print(f'✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows'
 "
 # Expected: raw=6112, cleaned=6100
 
-# Step 5: Start training (all models in parallel)
-nohup python training/modular/train_xgboost_only.py > logs/xgb.log 2>&1 &
-nohup python training/modular/train_lightgbm_only.py > logs/lgb.log 2>&1 &
-nohup python training/modular/train_catboost_only.py > logs/cat.log 2>&1 &
-nohup python training/modular/train_rf_only.py > logs/rf.log 2>&1 &
+# Run SEQUENTIALLY (NOT parallel!)
+echo "=== SESSION 1: Fast Models (5h) ==="
 
-# Step 6: Monitor
-tail -f logs/xgb.log
+python training/modular/train_xgboost_only.py 2>&1 | tee logs/xgb.log
+python training/modular/train_catboost_only.py 2>&1 | tee logs/cat.log
+python training/modular/train_rf_only.py 2>&1 | tee logs/rf.log
 
-# Step 7: Verify data loading in logs
+echo "✅ SESSION 1 DONE!"
 grep "Data loaded" logs/*.log
-# MUST show: raw=6112, cleaned=6100 ✅
+ls -lh models/checkpoints/
+```
 
-# === LET IT RUN FOR 8-11 HOURS ===
+#### **SESSION 2 (Copy-Paste - 4 hours):**
+```bash
+# === SESSION 015B: SLOW MODEL ===
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# Verify Session 1 checkpoints
+ls -lh models/checkpoints/*.pkl
+
+echo "=== SESSION 2: Slow Model (4h) ==="
+python training/modular/train_lightgbm_only.py 2>&1 | tee logs/lgb.log
+
+echo "✅ SESSION 2 DONE!"
+ls -lh models/checkpoints/
+```
+
+#### **SESSION 3 (Copy-Paste - 30 min):**
+```bash
+# === SESSION 015C: ENSEMBLE ===
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# Verify ALL 4 checkpoints
+ls -lh models/checkpoints/*.pkl
+
+echo "=== SESSION 3: Ensemble (30min) ==="
+python training/modular/train_ensemble_only.py 2>&1 | tee logs/ensemble.log
+
+echo "✅ ALL TRAINING COMPLETE!"
+ls -lh models/deployed/best_model.pkl
+grep "Best.*R²" logs/ensemble.log
 ```
 
 ---
