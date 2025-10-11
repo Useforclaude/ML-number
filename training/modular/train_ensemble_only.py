@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Add project root to path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import project modules
@@ -108,7 +108,8 @@ def main():
     logger.info("="*80)
 
     try:
-        df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
+        df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
+        logger.info(f"✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows")
         X, y_log, sample_weights = create_all_features(df_cleaned)
 
         X_train, X_test, y_log_train, y_log_test, sw_train, sw_test = split_data_stratified(

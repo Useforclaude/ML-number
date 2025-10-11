@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-RandomForest Only Training - Modular Script
-Train only RandomForest model with Optuna optimization
+XGBoost Only Training - Modular Script
+Train only XGBoost model with Optuna optimization
 Prevents timeout by splitting training into smaller pieces
 """
 
@@ -20,14 +20,14 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'logs/random_forest_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(f'logs/xgboost_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
 
 # Add project root to path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import project modules
@@ -37,9 +37,9 @@ try:
     from src.data_handler import load_and_clean_data
     from src.features import create_all_features
     from src.data_splitter import split_data_stratified, create_validation_set
-    from src.model_utils import AdvancedPreprocessor, optimize_random_forest
+    from src.model_utils import AdvancedPreprocessor, optimize_xgboost
     from src.training_callbacks import create_training_callbacks, print_training_header, print_training_footer
-    from sklearn.ensemble import RandomForestRegressor
+    from xgboost import XGBRegressor
     import numpy as np
     import pandas as pd
     import torch
@@ -63,11 +63,11 @@ def check_gpu():
 
 
 def main():
-    """Main RandomForest training pipeline"""
+    """Main XGBoost training pipeline"""
     start_time = time.time()
 
     logger.info("\n" + "="*80)
-    logger.info("🚀 RFOOST MODULAR TRAINING")
+    logger.info("🚀 XGBOOST MODULAR TRAINING")
     logger.info("="*80)
     logger.info(f"📂 Project: {BASE_PATH}")
     logger.info(f"🖥️  Environment: {detect_environment()}")
@@ -82,8 +82,8 @@ def main():
     logger.info("="*80)
 
     try:
-        df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
-        logger.info(f"✅ Data loaded: {len(df_cleaned)} rows")
+        df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
+        logger.info(f"✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows")
     except Exception as e:
         logger.error(f"❌ Failed to load data: {e}")
         return 1
@@ -165,9 +165,9 @@ def main():
         logger.error(f"❌ Failed to preprocess: {e}")
         return 1
 
-    # Step 7: RFOOST OPTIMIZATION
+    # Step 7: XGBOOST OPTIMIZATION
     logger.info("\n" + "="*80)
-    logger.info("🔥 STEP 7: RFOOST OPTIMIZATION")
+    logger.info("🔥 STEP 7: XGBOOST OPTIMIZATION")
     logger.info("="*80)
 
     n_trials = MODEL_CONFIG.get('optuna_trials', 100)
@@ -184,13 +184,13 @@ def main():
     )
 
     # Print header
-    print_training_header("RandomForest", n_trials, use_gpu)
+    print_training_header("XGBoost", n_trials, use_gpu)
 
     optimization_start = time.time()
 
     try:
-        # Optimize RandomForest
-        rf_params = optimize_random_forest(
+        # Optimize XGBoost
+        xgb_params = optimize_xgboost(
             X_tr_processed, y_tr,
             n_trials=n_trials,
             cv_folds=10,
@@ -200,14 +200,14 @@ def main():
         )
 
         optimization_time = time.time() - optimization_start
-        print_training_footer("RandomForest", rf_params.get('best_cv_score', 0.0) if isinstance(rf_params, dict) else 0.0, optimization_time)
+        print_training_footer("XGBoost", xgb_params.get('best_cv_score', 0.0) if isinstance(xgb_params, dict) else 0.0, optimization_time)
 
         # Train final model with best params
         logger.info("\n" + "="*80)
-        logger.info("🎯 Training Final RandomForest Model")
+        logger.info("🎯 Training Final XGBoost Model")
         logger.info("="*80)
 
-        model = RandomForestRegressor(**rf_params)
+        model = XGBRegressor(**xgb_params)
         model.fit(X_tr_processed, y_tr, sample_weight=sw_tr)
 
         # Evaluate
@@ -216,18 +216,18 @@ def main():
         mae = mean_absolute_error(y_val, y_val_pred)
         rmse = np.sqrt(mean_squared_error(y_val, y_val_pred))
 
-        logger.info(f"✅ RandomForest trained successfully!")
+        logger.info(f"✅ XGBoost trained successfully!")
         logger.info(f"   R² Score:  {r2:.4f}")
         logger.info(f"   MAE:       {mae:.2f}")
         logger.info(f"   RMSE:      {rmse:.2f}")
 
         # Save checkpoint
         os.makedirs("models/checkpoints", exist_ok=True)
-        checkpoint_path = "models/checkpoints/random_forest_checkpoint.pkl"
+        checkpoint_path = "models/checkpoints/xgboost_checkpoint.pkl"
 
         checkpoint = {
             'model': model,
-            'params': rf_params,
+            'params': xgb_params,
             'r2_score': r2,
             'mae': mae,
             'rmse': rmse,
@@ -243,7 +243,7 @@ def main():
         # Total time
         total_time = (time.time() - start_time) / 3600
         logger.info("\n" + "="*80)
-        logger.info("✅ RFOOST TRAINING COMPLETE!")
+        logger.info("✅ XGBOOST TRAINING COMPLETE!")
         logger.info("="*80)
         logger.info(f"⏱️  Total Time: {total_time:.2f} hours")
         logger.info(f"📊 Best R²: {r2:.4f}")
@@ -253,7 +253,7 @@ def main():
         return 0
 
     except Exception as e:
-        logger.error(f"❌ RandomForest optimization failed: {e}")
+        logger.error(f"❌ XGBoost optimization failed: {e}")
         import traceback
         logger.error(traceback.format_exc())
         return 1

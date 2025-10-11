@@ -45,7 +45,7 @@ warnings.filterwarnings('ignore')
 # ====================================================================================
 
 # Add project root to Python path
-PROJECT_ROOT = Path(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = Path(os.path.dirname(os.path.abspath(__file__))).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import project modules

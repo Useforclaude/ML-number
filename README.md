@@ -18,41 +18,89 @@ This project implements a state-of-the-art machine learning pipeline for predict
 ## 📁 Project Structure
 
 ```
-ML_Project_Refactored/
-├── 📂 data/                    # Data storage
-│   ├── raw/                    # Original data files
-│   ├── processed/              # Cleaned data
-│   └── features/               # Engineered features
+number-ML/
+├── 📂 training/                # Training scripts
+│   ├── modular/                # Modular training (train_*_only.py)
+│   ├── main.py                 # Main pipeline
+│   └── train_terminal.py       # Terminal training
 │
-├── 📂 models/                  # Trained models
-│   ├── deployed/               # Production models
-│   └── experiments/            # Experimental models
+├── 📂 setup/                   # Setup scripts
+│   ├── setup_local.py          # Local setup
+│   ├── setup_paperspace.py     # Paperspace setup
+│   └── setup_colab_complete.py # Colab setup
 │
-├── 📂 src/                     # Source code
-│   ├── 📜 config.py           # Configuration settings
-│   ├── 📜 data_handler.py     # Data loading and cleaning
-│   ├── 📜 features.py         # Feature engineering (250+ features)
-│   ├── 📜 data_splitter.py    # Train/test splitting
-│   ├── 📜 model_utils.py      # Model utilities and optimization
-│   ├── 📜 train.py            # Training pipeline
-│   ├── 📜 evaluate.py         # Model evaluation
-│   └── 📜 visualize.py        # Visualization functions
+├── 📂 docs/                    # 📚 All documentation (50+ guides)
+│   ├── guides/                 # Platform-specific guides
+│   │   ├── kaggle/            # Kaggle guides (7 files)
+│   │   ├── paperspace/        # Paperspace guides (15 files)
+│   │   ├── colab/             # Colab guides (3 files)
+│   │   └── comparisons/       # Platform comparisons (5 files)
+│   ├── sessions/              # Session summaries (12 files)
+│   ├── fixes/                 # Fix documentation (5 files)
+│   ├── protocols/             # Session protocols (3 files)
+│   ├── implementation/        # Implementation docs (2 files)
+│   └── README.md              # Documentation index
+│
+├── 📂 packages/                # Distribution packages
+│   ├── kaggle/                # Kaggle deployment packages
+│   └── paperspace/            # Paperspace deployment packages
+│
+├── 📂 src/                     # Core source code
+│   ├── config.py              # Configuration settings
+│   ├── environment.py         # Environment detection
+│   ├── data_handler.py        # Data loading and cleaning
+│   ├── data_filter.py         # Data filtering
+│   ├── features.py            # Feature engineering (250+ features)
+│   ├── data_splitter.py       # Train/test splitting
+│   ├── model_utils.py         # Model utilities and optimization
+│   ├── train.py               # Training pipeline
+│   ├── training_callbacks.py  # Training callbacks
+│   ├── checkpoint_manager.py  # Checkpoint management
+│   ├── tier_models.py         # Tier-specific models
+│   ├── evaluate.py            # Model evaluation
+│   ├── visualize.py           # Visualization functions
+│   └── gpu_monitor.py         # GPU monitoring
+│
+├── 📂 scripts/                 # Utility scripts
+│   ├── batch_predict.py       # Batch predictions
+│   └── predict_single.py      # Single predictions
+│
+├── 📂 notebooks/               # Jupyter notebooks
+│   ├── Kaggle_ML_Training_AutoResume.ipynb
+│   ├── Kaggle_CatBoost_Training.ipynb
+│   └── Colab_ML_Training_AutoResume.ipynb
+│
+├── 📂 tests/                   # Test suite
+│   └── (comprehensive tests)
 │
 ├── 📂 api/                     # API implementation
-│   ├── 📜 app.py              # FastAPI/Flask application
-│   └── 📜 prediction.py       # Prediction pipeline
+│   ├── app.py                 # FastAPI/Flask application
+│   └── prediction.py          # Prediction pipeline
 │
 ├── 📂 utils/                   # Utility functions
-│   └── 📜 helpers.py          # Helper functions
+│   └── helpers.py             # Helper functions
+│
+├── 📂 data/                    # Data storage
+│   ├── raw/                   # Original data files
+│   ├── processed/             # Cleaned data
+│   └── features/              # Engineered features
+│
+├── 📂 models/                  # Trained models
+│   ├── deployed/              # Production models
+│   ├── checkpoints/           # Model checkpoints
+│   └── experiments/           # Experimental models
 │
 ├── 📂 results/                 # Output files
 │   ├── figures/               # Plots and visualizations
 │   ├── reports/               # Evaluation reports
 │   └── metrics/               # Performance metrics
 │
-├── 📜 main.py                 # Main pipeline script
+├── 📜 README.md               # This file
+├── 📜 CLAUDE.md               # Instructions for Claude Code
+├── 📜 NEXT_SESSION.md         # Next session guide
+├── 📜 QUICK_START.md          # Quick start guide
 ├── 📜 requirements.txt        # Dependencies
-└── 📜 README.md              # This file
+└── 📜 .project_state.json     # Project state
 ```
 
 ## 🚀 Quick Start

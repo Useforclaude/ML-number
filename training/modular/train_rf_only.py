@@ -1,97 +1,89 @@
 #!/usr/bin/env python3
 """
-Paperspace ML Training - Terminal Version
-Train phone number price prediction models with GPU support
+RandomForest Only Training - Modular Script
+Train only RandomForest model with Optuna optimization
+Prevents timeout by splitting training into smaller pieces
 """
 
 import os
 import sys
 import time
 import logging
+import joblib
 from datetime import datetime
 from pathlib import Path
 
-# Create logs directory
+# Setup logging
 os.makedirs("logs", exist_ok=True)
 
-# Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'logs/training_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(f'logs/random_forest_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
 
 # Add project root to path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import project modules
 try:
     from src.config import BASE_PATH, MODEL_CONFIG
-    from src.environment import detect_environment, setup_base_path
+    from src.environment import detect_environment
     from src.data_handler import load_and_clean_data
     from src.features import create_all_features
     from src.data_splitter import split_data_stratified, create_validation_set
-    from src.model_utils import AdvancedPreprocessor
-    from src.train_production import train_production_pipeline
+    from src.model_utils import AdvancedPreprocessor, optimize_random_forest
+    from src.training_callbacks import create_training_callbacks, print_training_header, print_training_footer
+    from sklearn.ensemble import RandomForestRegressor
     import numpy as np
     import pandas as pd
     import torch
+    from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 except ImportError as e:
     logger.error(f"Import error: {e}")
     logger.error("Make sure virtual environment is activated: source .venv/bin/activate")
     sys.exit(1)
 
 
-def print_header():
-    """Print training header"""
-    print("\n" + "="*80)
-    print("🚀 PAPERSPACE ML TRAINING - TERMINAL MODE")
-    print("="*80)
-    print(f"📂 Project: ML Phone Number Price Prediction")
-    print(f"📍 Path: {BASE_PATH}")
-    print(f"🖥️  Environment: {detect_environment()}")
-    print(f"🎯 Target: R² > 0.90")
-    print("="*80 + "\n")
-
-
 def check_gpu():
     """Check GPU availability"""
-    logger.info("🔍 Checking GPU...")
-
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
         gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3
-        logger.info(f"✅ GPU Available: {gpu_name}")
-        logger.info(f"   Memory: {gpu_memory:.1f} GB")
+        logger.info(f"✅ GPU Available: {gpu_name} ({gpu_memory:.1f} GB)")
         return True
     else:
-        logger.warning("⚠️  No GPU detected - Training will use CPU (much slower!)")
+        logger.warning("⚠️  No GPU detected - Will use CPU")
         return False
 
 
 def main():
-    """Main training pipeline"""
+    """Main RandomForest training pipeline"""
     start_time = time.time()
 
-    # Print header
-    print_header()
+    logger.info("\n" + "="*80)
+    logger.info("🚀 RFOOST MODULAR TRAINING")
+    logger.info("="*80)
+    logger.info(f"📂 Project: {BASE_PATH}")
+    logger.info(f"🖥️  Environment: {detect_environment()}")
+    logger.info("="*80)
 
     # Check GPU
     use_gpu = check_gpu()
 
-    # Step 1: Load data
+    # Step 1: Load filtered data
     logger.info("\n" + "="*80)
-    logger.info("STEP 1: Loading Data")
+    logger.info("STEP 1: Loading Filtered Data")
     logger.info("="*80)
 
     try:
-        df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
-        logger.info(f"✅ Data loaded: {len(df_cleaned)} rows")
+        df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
+        logger.info(f"✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows")
     except Exception as e:
         logger.error(f"❌ Failed to load data: {e}")
         return 1
@@ -132,7 +124,6 @@ def main():
     y_train = pd.Series(np.expm1(y_log_train))
     y_test = pd.Series(np.expm1(y_log_test))
     logger.info(f"✅ Train prices: ฿{y_train.min():,.0f} - ฿{y_train.max():,.0f}")
-    logger.info(f"✅ Test prices: ฿{y_test.min():,.0f} - ฿{y_test.max():,.0f}")
 
     # Step 5: Create validation set
     logger.info("\n" + "="*80)
@@ -174,58 +165,100 @@ def main():
         logger.error(f"❌ Failed to preprocess: {e}")
         return 1
 
-    # Step 7: PRODUCTION TRAINING
+    # Step 7: RFOOST OPTIMIZATION
     logger.info("\n" + "="*80)
-    logger.info("🔥 STEP 7: PRODUCTION TRAINING")
+    logger.info("🔥 STEP 7: RFOOST OPTIMIZATION")
     logger.info("="*80)
-    logger.info(f"⏱️  Expected duration: 9-12 hours")
-    logger.info(f"🎯 Optimization trials: {MODEL_CONFIG.get('optuna_trials', 100)}")
+
+    n_trials = MODEL_CONFIG.get('optuna_trials', 100)
+    logger.info(f"⏱️  Expected duration: 2-3 hours")
+    logger.info(f"🎯 Optimization trials: {n_trials}")
     logger.info(f"🔥 GPU enabled: {use_gpu}")
     logger.info("="*80 + "\n")
 
-    training_start = time.time()
+    # Create callbacks
+    callbacks = create_training_callbacks(
+        checkpoint_manager=None,
+        n_trials=n_trials,
+        use_gpu=use_gpu
+    )
+
+    # Print header
+    print_training_header("RandomForest", n_trials, use_gpu)
+
+    optimization_start = time.time()
 
     try:
-        results = train_production_pipeline(
+        # Optimize RandomForest
+        rf_params = optimize_random_forest(
             X_tr_processed, y_tr,
-            X_val_processed, y_val,
-            optimize=True,
-            n_trials=MODEL_CONFIG.get('optuna_trials', 100),
+            n_trials=n_trials,
+            cv_folds=10,
+            sample_weight=sw_tr,
             use_gpu=use_gpu,
-            verbose=True
+            callbacks=callbacks
         )
 
-        training_time = (time.time() - training_start) / 3600
+        optimization_time = time.time() - optimization_start
+        print_training_footer("RandomForest", rf_params.get('best_cv_score', 0.0) if isinstance(rf_params, dict) else 0.0, optimization_time)
 
-        # Final results
+        # Train final model with best params
         logger.info("\n" + "="*80)
-        logger.info("✅ TRAINING COMPLETE!")
+        logger.info("🎯 Training Final RandomForest Model")
         logger.info("="*80)
-        logger.info(f"⏱️  Training Time: {training_time:.2f} hours")
-        logger.info(f"🏆 Best Model: {results['best_model_name']}")
-        logger.info(f"📊 Best R²: {results['best_score']:.4f}")
-        logger.info(f"📉 MAE: {results['best_mae']:.2f}")
-        logger.info(f"📉 RMSE: {results['best_rmse']:.2f}")
-        logger.info("="*80)
+
+        model = RandomForestRegressor(**rf_params)
+        model.fit(X_tr_processed, y_tr, sample_weight=sw_tr)
+
+        # Evaluate
+        y_val_pred = model.predict(X_val_processed)
+        r2 = r2_score(y_val, y_val_pred)
+        mae = mean_absolute_error(y_val, y_val_pred)
+        rmse = np.sqrt(mean_squared_error(y_val, y_val_pred))
+
+        logger.info(f"✅ RandomForest trained successfully!")
+        logger.info(f"   R² Score:  {r2:.4f}")
+        logger.info(f"   MAE:       {mae:.2f}")
+        logger.info(f"   RMSE:      {rmse:.2f}")
+
+        # Save checkpoint
+        os.makedirs("models/checkpoints", exist_ok=True)
+        checkpoint_path = "models/checkpoints/random_forest_checkpoint.pkl"
+
+        checkpoint = {
+            'model': model,
+            'params': rf_params,
+            'r2_score': r2,
+            'mae': mae,
+            'rmse': rmse,
+            'training_time_hours': optimization_time / 3600,
+            'timestamp': datetime.now().isoformat(),
+            'preprocessor': preprocessor,
+            'feature_names': X_tr_processed.columns.tolist() if hasattr(X_tr_processed, 'columns') else None
+        }
+
+        joblib.dump(checkpoint, checkpoint_path)
+        logger.info(f"\n💾 Checkpoint saved: {checkpoint_path}")
 
         # Total time
         total_time = (time.time() - start_time) / 3600
-        logger.info(f"\n⏱️  Total Time: {total_time:.2f} hours")
-        logger.info("✅ All done! Models saved to models/ directory")
+        logger.info("\n" + "="*80)
+        logger.info("✅ RFOOST TRAINING COMPLETE!")
+        logger.info("="*80)
+        logger.info(f"⏱️  Total Time: {total_time:.2f} hours")
+        logger.info(f"📊 Best R²: {r2:.4f}")
+        logger.info(f"💾 Checkpoint: {checkpoint_path}")
+        logger.info("="*80)
 
         return 0
 
     except Exception as e:
-        logger.error(f"❌ Training failed: {e}")
+        logger.error(f"❌ RandomForest optimization failed: {e}")
         import traceback
         logger.error(traceback.format_exc())
         return 1
 
 
 if __name__ == "__main__":
-    # Create logs directory
-    os.makedirs("logs", exist_ok=True)
-
-    # Run training
     exit_code = main()
     sys.exit(exit_code)

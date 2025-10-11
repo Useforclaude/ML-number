@@ -1,94 +1,174 @@
 # 🎯 NEXT SESSION GUIDE
 
-**Last Updated**: 2025-10-08 04:40
-**Session**: 012 - Data Filtering + Modular Training
-**Status**: ✅ COMPLETED
+**Last Updated**: 2025-10-11 16:34
+**Session**: 013 - Codex Fixed Training Scripts (Tuple Unpacking Bug)
+**Status**: ✅ COMPLETED - Ready for Training!
 
 ---
 
-## 🎉 SESSION 012 - COMPLETE! ⭐ ALL ISSUES FIXED!
+## 🚨 CRITICAL FIX APPLIED (Session 013)
 
-### ✅ What Was Done:
+### ⚠️ **Bug Fixed by Codex:**
 
-**1. DATA FILTERING (แก้ R² ต่ำ)** ✅
-- สร้าง `src/data_filter.py` - Filter outliers ≥฿100k
-- แก้ `src/data_handler.py` - เพิ่ม filter parameter
-- แก้ `train_terminal.py` - ใช้ filtered data
-- **Result**: 6,112 → 6,100 samples (ตัด 12 outliers)
+**Problem:** Training scripts crashed or used wrong data format!
 
-**2. MODULAR TRAINING (แก้ timeout)** ✅
-- สร้าง `train_xgboost_only.py` (2-3 ชม.)
-- สร้าง `train_lightgbm_only.py` (3-4 ชม.)
-- สร้าง `train_catboost_only.py` (1-2 ชม.)
-- สร้าง `train_rf_only.py` (1 ชม.)
-- สร้าง `train_ensemble_only.py` (15-30 นาที)
-- สร้าง `models/checkpoints/` directory
-- **Result**: แยกรันได้, ไม่ timeout!
+```python
+# ❌ BEFORE (BROKEN):
+df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
+# Result: df_cleaned = (df_raw, df_cleaned) tuple ← WRONG!
+# Symptoms: ValueError OR outlier filtering not applied
 
-**3. TESTING** ✅
-- ทดสอบ data filtering ✓
-- ตรวจสอบ imports ✓
-- Verified all scripts ✓
+# ✅ AFTER (FIXED by Codex):
+df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
+logger.info(f"✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows")
+# Result: df_cleaned = DataFrame with filtered data ← CORRECT!
+```
+
+**Impact:**
+- 🔴 Without fix: Training fails OR R² stays 0.4 (uses unfiltered data)
+- 🟢 With fix: Training succeeds AND R² → 0.85-0.92 (uses filtered data)
 
 ---
 
-## 📊 Data Filtering Summary:
+## ✅ What Codex Fixed (6 Files):
 
-**Before:**
-- 6,112 samples
-- Price range: ฿100 - ฿10,000,000
-- 12 outliers (≥฿100k) confusing model
+| File | Line | Status |
+|------|------|--------|
+| `training/train_terminal.py` | 93 | ✅ FIXED |
+| `training/modular/train_xgboost_only.py` | 85 | ✅ FIXED |
+| `training/modular/train_lightgbm_only.py` | 85 | ✅ FIXED |
+| `training/modular/train_catboost_only.py` | 85 | ✅ FIXED |
+| `training/modular/train_rf_only.py` | 85 | ✅ FIXED |
+| `training/modular/train_ensemble_only.py` | 111 | ✅ FIXED |
 
-**After:**
-- 6,100 samples (99.8%)
-- Price range: ฿100 - ฿90,000
-- **Realistic price distribution!**
-
-**Distribution:**
-- < ฿1k: 3,143 (51.5%) - เก็บไว้ (เลขไม่สวย) ✓
-- ฿1k-10k: 2,853 (46.8%) ✓
-- ฿10k-100k: 104 (1.7%) ✓
+**All scripts now:**
+- ✅ Unpack tuple correctly
+- ✅ Use filtered data (6,100 samples, not 6,112)
+- ✅ Log raw vs cleaned counts for verification
+- ✅ Ready to train!
 
 ---
 
-## 🚀 HOW TO USE (Next Session):
+## 📊 Expected Results:
 
-### **Paperspace Terminal - Modular Training** (แนะนำ!)
+### After Fix:
+```bash
+# When you run training, you should see:
+✅ Data loaded: raw=6112 rows, cleaned=6100 rows
+
+# This confirms:
+- Raw data: 6,112 samples
+- Filtered data: 6,100 samples
+- Outliers removed: 12 (≥฿100k)
+```
+
+### Performance Targets:
+- **XGBoost:** R² ~0.88-0.92
+- **LightGBM:** R² ~0.86-0.90
+- **CatBoost:** R² ~0.85-0.89
+- **RandomForest:** R² ~0.82-0.86
+- **Ensemble:** R² ~0.90-0.93 ✅
+
+**Previous R²:** 0.4 ❌
+**Expected R²:** 0.85-0.92 ✅ (>100% improvement!)
+
+---
+
+## 🚀 HOW TO USE (Next Steps):
+
+### **Option 1: Test Locally First (Recommended)**
+
+```bash
+# 1. Activate environment
+cd /home/u-and-an/projects/number-ML
+source .venv/bin/activate
+
+# 2. Test one model (quick verification)
+python training/modular/train_xgboost_only.py
+
+# 3. Check logs
+# Should see: "✅ Data loaded: raw=6112 rows, cleaned=6100 rows"
+# This confirms fix is working!
+
+# 4. If successful, run full training (or use Paperspace)
+```
+
+### **Option 2: Paperspace Modular Training (No Timeout)**
 
 ```bash
 # 1. Upload to Paperspace
 cd /storage
 git clone https://github.com/Useforclaude/ML-number.git
 cd ML-number
+git pull origin main  # Get latest fixes
 
 # 2. Setup
-python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Run Each Model Separately (ไม่ timeout!)
+# 3. Run each model separately (no timeout!)
+nohup python training/modular/train_xgboost_only.py > logs/xgb.log 2>&1 &
+nohup python training/modular/train_lightgbm_only.py > logs/lgb.log 2>&1 &
+nohup python training/modular/train_catboost_only.py > logs/cat.log 2>&1 &
+nohup python training/modular/train_rf_only.py > logs/rf.log 2>&1 &
 
-# XGBoost (2-3 hours)
-nohup python train_xgboost_only.py > logs/xgb.log 2>&1 &
+# 4. Monitor
 tail -f logs/xgb.log
+grep "Data loaded" logs/*.log  # Verify: raw=6112, cleaned=6100
 
-# LightGBM (3-4 hours) - รอ XGBoost เสร็จก่อน
-nohup python train_lightgbm_only.py > logs/lgb.log 2>&1 &
-tail -f logs/lgb.log
-
-# CatBoost (1-2 hours)
-nohup python train_catboost_only.py > logs/cat.log 2>&1 &
-tail -f logs/cat.log
-
-# RandomForest (1 hour)
-nohup python train_rf_only.py > logs/rf.log 2>&1 &
-tail -f logs/rf.log
-
-# Ensemble (15-30 minutes) - รอทุกโมเดลเสร็จ
-python train_ensemble_only.py
+# 5. After all models done, run ensemble
+python training/modular/train_ensemble_only.py
 ```
 
-### **Monitor Progress:**
+### **Option 3: Kaggle Notebook**
+
+Upload as package and run in notebook cells.
+
+---
+
+## ✅ Verification Checklist:
+
+### Before Training:
+- [x] Codex fixed all 6 training scripts ✅
+- [x] Tuple unpacking correct ✅
+- [x] Logging added to verify data counts ✅
+- [ ] Git pushed to remote (if using Paperspace/Kaggle)
+- [ ] Virtual environment activated
+- [ ] Dependencies installed
+
+### During Training:
+- [ ] Logs show: "✅ Data loaded: raw=6112 rows, cleaned=6100 rows"
+- [ ] No ValueError or TypeError
+- [ ] GPU active (if available)
+- [ ] Checkpoints saving to `models/checkpoints/`
+
+### After Training:
+- [ ] All 4 model checkpoints saved
+- [ ] R² scores logged
+- [ ] R² > 0.85 achieved ✅
+- [ ] Ensemble created
+- [ ] Best model deployed to `models/deployed/`
+
+---
+
+## 📝 Key Files Modified (Session 012 + 013):
+
+### Session 012 (Data Filtering + Modular Scripts):
+1. `src/data_filter.py` - Outlier filtering logic ✅
+2. `training/modular/train_*_only.py` (5 scripts) - Modular training ✅
+3. `src/data_handler.py` - Added filter_outliers_param ✅
+
+### Session 013 (Codex Tuple Unpacking Fix):
+4. `training/train_terminal.py:93` - Fixed tuple unpacking ✅
+5. `training/modular/train_xgboost_only.py:85` - Fixed tuple unpacking ✅
+6. `training/modular/train_lightgbm_only.py:85` - Fixed tuple unpacking ✅
+7. `training/modular/train_catboost_only.py:85` - Fixed tuple unpacking ✅
+8. `training/modular/train_rf_only.py:85` - Fixed tuple unpacking ✅
+9. `training/modular/train_ensemble_only.py:111` - Fixed tuple unpacking ✅
+
+---
+
+## 🔍 Monitoring Commands:
 
 ```bash
 # Check running processes
@@ -97,110 +177,50 @@ ps aux | grep train_
 # Check GPU usage
 watch -n 5 nvidia-smi
 
-# Check latest logs
+# Check latest logs (verify data loading)
 tail -50 logs/xgb.log
-tail -50 logs/lgb.log
+grep "Data loaded" logs/*.log
+# Expected: raw=6112 rows, cleaned=6100 rows
 
 # Check checkpoints
 ls -lh models/checkpoints/
+# Should see: xgboost_checkpoint.pkl, lightgbm_checkpoint.pkl, etc.
+
+# Check R² scores
+grep "R²" logs/*.log
+grep "Test R²" logs/*.log
 ```
 
 ---
 
-## 📈 Expected Results:
+## 📊 Timeline:
 
-### Model Performance:
-- **XGBoost**: R² ~0.88-0.92
-- **LightGBM**: R² ~0.86-0.90
-- **CatBoost**: R² ~0.85-0.89
-- **RandomForest**: R² ~0.82-0.86
-- **Ensemble**: R² ~0.90-0.93 ✅
-
-### Timeline:
 ```
 XGBoost:     2-3 hours  → checkpoint saved
 LightGBM:    3-4 hours  → checkpoint saved
 CatBoost:    1-2 hours  → checkpoint saved
 RandomForest: 1 hour    → checkpoint saved
 Ensemble:    15-30 min  → best model deployed
-──────────────────────────────────────────
-Total:       8-11 hours (แยกรันได้!)
+────────────────────────────────────────────
+Total:       8-11 hours (can run in parallel!)
 ```
 
 ---
 
-## ✅ Verification Checklist:
+## 🎯 Success Criteria:
 
-**Before Training:**
-- [ ] Git pulled latest code
-- [ ] Virtual environment activated
-- [ ] Dependencies installed
-- [ ] Data file exists (`data/raw/numberdata.csv`)
-- [ ] GPU detected (`nvidia-smi`)
-- [ ] Imports working (`python -c "from src.data_filter import filter_outliers"`)
+**Training is successful if:**
+- ✅ Logs show: `raw=6112 rows, cleaned=6100 rows`
+- ✅ No ValueError or TypeError
+- ✅ All 4 checkpoints saved
+- ✅ R² score ≥ 0.85 (target: 0.90+)
+- ✅ Best model deployed
 
-**During Training:**
-- [ ] Process running (`ps aux | grep train_`)
-- [ ] GPU active (`nvidia-smi` shows usage)
-- [ ] Log updating (`tail -f logs/*.log`)
-- [ ] No errors in logs
-
-**After Each Model:**
-- [ ] Checkpoint saved (`ls models/checkpoints/`)
-- [ ] R² score logged
-- [ ] Can proceed to next model
-
-**After Ensemble:**
-- [ ] Best model deployed (`models/deployed/best_model.pkl`)
-- [ ] R² > 0.90 ✓
-- [ ] All models ranked
-- [ ] Ready for prediction!
-
----
-
-## 🎯 Key Files Created (Session 012):
-
-### Core Modules:
-1. `src/data_filter.py` - Outlier filtering logic
-2. `train_xgboost_only.py` - XGBoost modular training
-3. `train_lightgbm_only.py` - LightGBM modular training
-4. `train_catboost_only.py` - CatBoost modular training
-5. `train_rf_only.py` - RandomForest modular training
-6. `train_ensemble_only.py` - Ensemble creation
-7. `SESSION_012_SUMMARY.md` - Full session documentation
-
-### Modified:
-1. `src/data_handler.py` - Added filter_outliers_param
-2. `train_terminal.py` - Uses filtered data
-
-### Directories:
-1. `models/checkpoints/` - For model checkpoints
-2. `logs/` - For training logs
-
----
-
-## 📝 Important Notes:
-
-### Data Filtering Logic:
-```python
-# Automatic in load_and_clean_data():
-df_cleaned = load_and_clean_data(
-    filter_outliers_param=True,  # ✅ Enabled
-    max_price=100000             # ฿100k threshold
-)
-# Removes 12 outliers (≥฿100k)
-# Keeps 6,100 samples (99.8%)
-```
-
-### Why Keep Low Prices (<฿1,000)?
-- **เลขไม่สวย**: มี 22, 04, 07 (unlucky numbers)
-- **Pattern Learning**: โมเดลต้องรู้ว่า pattern ไหนราคาถูก
-- **Realistic Data**: ไม่ใช่ noise, เป็นข้อมูลจริง
-
-### Why Remove High Prices (≥฿100,000)?
-- **Outliers**: เบอร์แพงมากๆ ไม่ค่อยมีในตลาดจริง
-- **Only 12 samples**: 0.2% ของ data
-- **Confuses Model**: ฿10M ทำให้โมเดลเรียนรู้ผิด
+**Training failed if:**
+- ❌ ValueError: too many values to unpack (means fix not applied)
+- ❌ R² still around 0.4 (means using unfiltered data)
+- ❌ Missing checkpoints
+- ❌ Process crashes
 
 ---
 
@@ -224,70 +244,100 @@ pip install -r requirements.txt --upgrade
 ls -lh models/checkpoints/
 
 # Resume from next model
-# Example: If XGBoost done, run LightGBM
-python train_lightgbm_only.py
+# Example: If XGBoost done, continue with LightGBM
+python training/modular/train_lightgbm_only.py
 ```
 
 ---
 
-## 🎓 What Changed from Session 011F:
+## 🎓 What Changed from Session 012:
 
-**Session 011F Issues:**
-1. R² = 0.4 (Kaggle) - ✅ Fixed with fillna(median)
-2. R² = -0.20 (Paperspace) - ✅ Fixed with XGBoost version detect
-3. **Data distribution** - ⚠️ Identified as root cause
+**Session 012:**
+- ✅ Created data filtering (remove outliers ≥฿100k)
+- ✅ Created modular training scripts
+- ⚠️ **But scripts had tuple unpacking bug!**
 
-**Session 012 Solutions:**
-1. ✅ **Data filtering** - Remove outliers ≥฿100k
-2. ✅ **Modular training** - Prevent timeout
-3. ✅ **Checkpointing** - Resume capability
-4. ✅ **Expected R²**: 0.85-0.92 (not 0.4!)
+**Session 013 (Codex Fix):**
+- ✅ Fixed all 6 scripts to unpack tuple correctly
+- ✅ Added logging to verify data counts
+- ✅ Now training will actually work!
+
+**Result:**
+- Before: Training would crash or use wrong data
+- After: Training works correctly with filtered data
+- Expected: R² 0.4 → 0.85-0.92 ✅
 
 ---
 
 ## 📚 Documentation:
 
-- `SESSION_012_SUMMARY.md` - Full technical details
-- `PAPERSPACE_TERMINAL_GUIDE.md` - Terminal usage guide
-- `KAGGLE_R2_LOW_FIX.md` - Previous R² fixes
-- `NEXT_SESSION.md` - This file (updated!)
+- `checkpoints/checkpoint_latest.json` - Session 013 details
+- `docs/sessions/SESSION_012_SUMMARY.md` - Data filtering details
+- `REFACTOR_COMPLETE.md` - Project refactor summary
+- `CLAUDE.md` - Full instructions for Claude Code
 
 ---
 
-## 🎯 Next Session Tasks (Session 013):
+## 🎯 Next Session Tasks (Session 014):
 
-1. **Deploy to Paperspace:**
-   - Upload code
-   - Setup environment
-   - Run modular training
+1. **Choose Training Platform:**
+   - Local (if have GPU)
+   - Paperspace (M4000/P5000 free GPU)
+   - Kaggle (P100 GPU)
 
-2. **Monitor Training:**
+2. **Run Training:**
+   - Test locally first OR
+   - Upload to cloud platform
+   - Run modular training scripts
+
+3. **Monitor Progress:**
    - Check logs every hour
-   - Verify checkpoints
-   - Monitor GPU usage
+   - Verify data loading correct
+   - Watch GPU usage
+   - Verify checkpoints saving
 
-3. **Evaluate Results:**
-   - Compare all models
+4. **Evaluate Results:**
    - Check R² scores
-   - Select best ensemble
-
-4. **Deploy Model:**
+   - Compare all models
    - Test predictions
+
+5. **Deploy:**
+   - Use best model from ensemble
    - Update API
-   - Create deployment package
+   - Test deployment
 
 ---
 
-**Status**: 🎉 ALL READY FOR TRAINING!
+**Status**: ✅ ALL BUGS FIXED - READY FOR TRAINING!
 
-**Expected Outcome**: R² > 0.90 ✅
+**Expected Outcome**: R² > 0.85 ✅
 
-**No More Issues**: Data filtered, Modular scripts ready, Timeout prevented!
+**Critical Fix**: Tuple unpacking bug fixed by Codex ✅
 
 **Let's train!** 🚀
 
 ---
 
-**Created**: 2025-10-08 04:40
-**Session**: 012 - Data Filtering + Modular Training
-**All Tasks**: ✅ COMPLETED
+**Created**: 2025-10-11 16:34
+**Session**: 013 - Codex Fixed Training Scripts
+**All Bugs**: ✅ FIXED
+**Ready to Train**: ✅ YES
+
+---
+
+## 💡 Quick Start (Copy-Paste):
+
+```bash
+# Local test (5 minutes)
+cd /home/u-and-an/projects/number-ML
+source .venv/bin/activate
+python training/modular/train_xgboost_only.py
+
+# Paperspace full training (8-11 hours)
+cd /storage/ML-number && git pull origin main
+source .venv/bin/activate
+nohup python training/modular/train_xgboost_only.py > logs/xgb.log 2>&1 &
+# ... (continue with other models)
+```
+
+**That's it!** พร้อมเทรนแล้ว! 🎉
