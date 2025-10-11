@@ -212,7 +212,59 @@ grep "Best Model" logs/ensemble.log
 
 ## 📊 ตรวจสอบความคืบหน้า
 
-### **เช็คว่ารันโมเดลไหนไปแล้วบ้าง:**
+### **วิธีที่ 1: ใช้ Summary Script (แนะนำ!)** 🌟
+
+**รัน script นี้เมื่อไหร่ก็ได้เพื่อดูสรุปผลทั้งหมด:**
+
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+python scripts/summarize_results.py
+```
+
+**จะแสดง:**
+- ✅ โมเดลไหนรันเสร็จแล้ว โมเดลไหนยังไม่ได้รัน
+- 📊 ตาราง R² scores, MAE, RMSE ของทุกโมเดล
+- 🏆 โมเดลไหนดีที่สุด
+- 📈 Progress: X/4 models completed
+- 💡 ขั้นตอนถัดไป
+
+**ตัวอย่าง output:**
+```
+📊 TRAINING RESULTS SUMMARY
+================================================================================
+
+🔍 Scanning for completed models...
+
+✅ XGBoost         | R²=0.9034 | MAE=0.12 | Time=2.3h | Completed: 2025-10-11 14:30
+✅ RandomForest    | R²=0.8567 | MAE=0.15 | Time=1.1h | Completed: 2025-10-11 16:00
+⏳ LightGBM        | Not trained yet
+⏳ CatBoost        | Not trained yet
+
+📈 PERFORMANCE COMPARISON
+================================================================================
+Model           |   R² Score |      MAE |     RMSE |     Time
+--------------------------------------------------------------------------------
+XGBoost         |     0.9034 |     0.12 |     0.18 |    2.3h
+RandomForest    |     0.8567 |     0.15 |     0.21 |    1.1h
+
+🏆 BEST MODEL: XGBoost
+   R² Score:  0.9034
+   MAE:       0.12
+
+📊 PROGRESS: 2/4 models completed (50%)
+⏳ Remaining models:
+   - LightGBM
+   - CatBoost
+
+💡 Continue training remaining models one by one
+```
+
+---
+
+### **วิธีที่ 2: เช็คแบบ Manual**
+
+**เช็คว่ารันโมเดลไหนไปแล้วบ้าง:**
 ```bash
 cd /notebooks/ML-number
 ls -lh models/checkpoints/
@@ -224,7 +276,7 @@ ls -lh models/checkpoints/
 # random_forest_checkpoint.pkl (if RandomForest done)
 ```
 
-### **เช็ค R² scores:**
+**เช็ค R² scores:**
 ```bash
 grep "R² Score" logs/xgb.log
 grep "R² Score" logs/lgb.log
@@ -232,7 +284,7 @@ grep "R² Score" logs/cat.log
 grep "R² Score" logs/rf.log
 ```
 
-### **เช็คว่าครบ 4 checkpoints หรือยัง:**
+**เช็คว่าครบ 4 checkpoints หรือยัง:**
 ```bash
 ls models/checkpoints/*.pkl | wc -l
 # Expected: 4 (if all models trained)
