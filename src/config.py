@@ -379,7 +379,7 @@ MODEL_CONFIG = {
     'random_state': 42,
     'n_jobs': -1,
     'early_stopping_rounds': 100,
-    'optuna_trials': 150,  # 🔥 เพิ่มจาก 50
+    'optuna_trials': 300,  # เพิ่มรอบค้นหา hyperparameter เพื่อเก็บ pattern พรีเมียม
     'feature_selection_method': 'hybrid',
     'max_features': 250,  # 🔥 เพิ่มจาก 150
     'feature_selection_ratio': 0.85,  # 🔥 เพิ่มจาก 0.8

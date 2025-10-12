@@ -6,9 +6,11 @@ import pandas as pd
 import numpy as np
 import os
 import warnings
+from collections import defaultdict
 warnings.filterwarnings('ignore')
 
 from src.config import CONFIG, DATA_PATH, BASE_PATH, ENV_TYPE, DATA_CONFIG
+from src.features import PREMIUM_SUFFIX_WEIGHTS
 
 # ====================================================================================
 # HELPER FUNCTIONS
@@ -319,21 +321,34 @@ def calculate_sample_weights(df, is_train=True):
     
     print("⚖️ Calculating sample weights from TRAINING data...")
     
-    # Calculate percentiles from THIS data only
-    price_percentiles = df['price'].rank(pct=True)
-    
-    # Exponential weighting
-    alpha = 2.5
-    base_weight = 0.5
-    sample_weights = base_weight + (1 - base_weight) * np.exp(alpha * (price_percentiles - 0.5))
-    
-    # Normalize
+    prices = df['price'].clip(lower=100)
+    price_log = np.log1p(prices)
+    log_scaled = (price_log - price_log.min()) / (price_log.max() - price_log.min() + 1e-9)
+
+    # Base weighting grows smoothly with log price (focus on upper tail)
+    base_weight = 0.6 + 1.7 * np.power(log_scaled, 1.25)
+
+    # Tier boosts for premium ranges
+    tier_boost = np.select(
+        [
+            prices >= 50000,
+            prices >= 20000,
+            prices >= 10000,
+            prices >= 5000
+        ],
+        [2.0, 1.2, 0.8, 0.4],
+        default=0.0
+    )
+
+    # Slight penalty for very low prices to balance the distribution
+    low_price_penalty = np.where(prices < 800, 0.25, 0.0)
+
+    sample_weights = base_weight + tier_boost + low_price_penalty
+
+    # Normalize and guard against extremely small weights
+    sample_weights = np.clip(sample_weights, 0.3, None)
     sample_weights = sample_weights / sample_weights.mean()
-    
-    # Boost ultra premium
-    ultra_premium_mask = df['price'] >= 1_000_000
-    sample_weights.loc[ultra_premium_mask] *= 2.0
-    
+
     df['sample_weight'] = sample_weights
     print(f"✅ Sample weights calculated for {len(df)} samples")
     return df
@@ -353,6 +368,7 @@ def calculate_market_statistics(train_df):
     print("📊 Calculating market statistics from TRAINING data...")
     
     pattern_prices = {}
+    premium_suffix_prices = defaultdict(list)
     
     for idx, row in train_df.iterrows():
         phone = str(row['phone_number'])
@@ -365,6 +381,8 @@ def calculate_market_statistics(train_df):
                 if pattern not in pattern_prices:
                     pattern_prices[pattern] = []
                 pattern_prices[pattern].append(price)
+                if pattern in PREMIUM_SUFFIX_WEIGHTS:
+                    premium_suffix_prices[pattern].append(price)
         
         # ABC pattern
         if len(phone) >= 6:
@@ -383,9 +401,18 @@ def calculate_market_statistics(train_df):
             pattern_popularity[pattern] = len(prices)
     
     print(f"✅ Market statistics calculated from {len(train_df)} training samples")
-    
+
+    premium_suffix_stats = {
+        suffix: float(np.median(prices))
+        for suffix, prices in premium_suffix_prices.items()
+        if len(prices) >= 2
+    }
+
     return {
         'avg_prices': pattern_avg_prices,
         'popularity': pattern_popularity,
-        'n_train_samples': len(train_df)
+        'n_train_samples': len(train_df),
+        'premium_suffix_stats': premium_suffix_stats,
+        'global_median': float(train_df['price'].median()),
+        'global_mean': float(train_df['price'].mean())
     }

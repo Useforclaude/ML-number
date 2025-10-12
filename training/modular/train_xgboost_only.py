@@ -133,14 +133,18 @@ def main():
         logger.error(f"❌ Failed to prepare features and splits: {e}")
         return 1
 
-    # Step 3: Convert to actual prices
+    # Step 3: Prepare target variables (log + actual)
     logger.info("\n" + "="*80)
-    logger.info("STEP 3: Converting to Actual Prices")
+    logger.info("STEP 3: Preparing Targets")
     logger.info("="*80)
 
-    y_train = pd.Series(np.expm1(y_log_train))
-    y_test = pd.Series(np.expm1(y_log_test))
-    logger.info(f"✅ Train prices: ฿{y_train.min():,.0f} - ฿{y_train.max():,.0f}")
+    y_train_log = y_log.iloc[train_indices].copy()
+    y_test_log = y_log.iloc[test_indices].copy()
+    y_train_actual = pd.Series(np.expm1(y_train_log), index=y_train_log.index)
+    y_test_actual = pd.Series(np.expm1(y_test_log), index=y_test_log.index)
+
+    logger.info(f"✅ Train prices: ฿{y_train_actual.min():,.0f} - ฿{y_train_actual.max():,.0f}")
+    logger.info(f"✅ Test prices: ฿{y_test_actual.min():,.0f} - ฿{y_test_actual.max():,.0f}")
 
     # Step 4: Create validation set
     logger.info("\n" + "="*80)
@@ -149,7 +153,7 @@ def main():
 
     try:
         X_tr, X_val, y_tr, y_val, sw_tr, sw_val = create_validation_set(
-            X_train, y_train, sw_train,
+            X_train, y_train_actual, sw_train,
             val_size=0.15,
             random_state=42
         )
@@ -158,6 +162,9 @@ def main():
     except Exception as e:
         logger.error(f"❌ Failed to create validation set: {e}")
         return 1
+
+    y_tr_log = np.log1p(y_tr)
+    y_val_log = np.log1p(y_val)
 
     # Step 5: Preprocessing
     logger.info("\n" + "="*80)
@@ -209,7 +216,7 @@ def main():
     try:
         # Optimize XGBoost
         xgb_params = optimize_xgboost(
-            X_tr_processed, y_tr,
+            X_tr_processed, y_tr_log,
             n_trials=n_trials,
             cv_folds=10,
             sample_weight=sw_tr_array,
@@ -226,18 +233,29 @@ def main():
         logger.info("="*80)
 
         model = XGBRegressor(**xgb_params)
-        model.fit(X_tr_processed, y_tr, sample_weight=sw_tr_array)
+        model.fit(X_tr_processed, y_tr_log, sample_weight=sw_tr_array)
 
         # Evaluate
-        y_val_pred = model.predict(X_val_processed)
+        y_val_pred_log = model.predict(X_val_processed)
+        y_val_pred = np.expm1(y_val_pred_log)
         r2 = r2_score(y_val, y_val_pred)
         mae = mean_absolute_error(y_val, y_val_pred)
         rmse = np.sqrt(mean_squared_error(y_val, y_val_pred))
+
+        # Test evaluation
+        y_test_pred_log = model.predict(X_test_processed)
+        y_test_pred = np.expm1(y_test_pred_log)
+        test_r2 = r2_score(y_test_actual, y_test_pred)
+        test_mae = mean_absolute_error(y_test_actual, y_test_pred)
+        test_rmse = np.sqrt(mean_squared_error(y_test_actual, y_test_pred))
 
         logger.info(f"✅ XGBoost trained successfully!")
         logger.info(f"   R² Score:  {r2:.4f}")
         logger.info(f"   MAE:       {mae:.2f}")
         logger.info(f"   RMSE:      {rmse:.2f}")
+        logger.info(f"   Test R²:   {test_r2:.4f}")
+        logger.info(f"   Test MAE:  {test_mae:.2f}")
+        logger.info(f"   Test RMSE: {test_rmse:.2f}")
 
         # Save checkpoint
         os.makedirs("models/checkpoints", exist_ok=True)
@@ -249,6 +267,9 @@ def main():
             'r2_score': r2,
             'mae': mae,
             'rmse': rmse,
+            'test_r2': test_r2,
+            'test_mae': test_mae,
+            'test_rmse': test_rmse,
             'training_time_hours': optimization_time / 3600,
             'timestamp': datetime.now().isoformat(),
             'preprocessor': preprocessor,

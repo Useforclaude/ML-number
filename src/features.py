@@ -8,13 +8,51 @@ Split into parts due to size limitations.
 import pandas as pd
 import numpy as np
 from scipy import stats
-from collections import Counter
+from collections import Counter, defaultdict
 from itertools import groupby
 import math
 import warnings
 warnings.filterwarnings('ignore')
 
 from src.config import CONFIG
+
+# Premium pattern configuration for high-value price signals
+PREMIUM_SUFFIX_WEIGHTS = {
+    '8888': 1.00,
+    '9999': 0.98,
+    '7777': 0.92,
+    '6688': 0.78,
+    '8899': 0.80,
+    '9988': 0.80,
+    '168': 0.76,
+    '6789': 0.74,
+    '9876': 0.74,
+    '456': 0.65,
+    '369': 0.62,
+    '5555': 0.70,
+    '1111': 0.68,
+    '2222': 0.66,
+    '3333': 0.66,
+    '4444': 0.64,
+    '6666': 0.72,
+    '8889': 0.85,
+    '889': 0.72,
+    '999': 0.70
+}
+
+PREMIUM_PREFIX_WEIGHTS = {
+    '089': 0.35,
+    '088': 0.45,
+    '086': 0.32,
+    '080': 0.30,
+    '081': 0.28,
+    '082': 0.26,
+    '092': 0.30,
+    '091': 0.28,
+    '090': 0.32
+}
+
+HIGH_VALUE_DIGITS = {'7', '8', '9'}
 
 # ====================================================================================
 # BASIC FEATURE FUNCTIONS
@@ -55,6 +93,71 @@ def get_premium_pair_count(n):
         if n[i:i+2] in CONFIG['PREMIUM_PAIRS']:
             count += 1
     return count
+
+def get_premium_suffix_score(n):
+    """คะแนน suffix สำหรับเบอร์พรีเมียม"""
+    for length in range(4, 1, -1):
+        suffix = n[-length:]
+        if suffix in PREMIUM_SUFFIX_WEIGHTS:
+            return PREMIUM_SUFFIX_WEIGHTS[suffix] * length
+    return 0.0
+
+def get_premium_prefix_score(n):
+    """คะแนน prefix สำหรับเบอร์พรีเมียม"""
+    prefix = n[:3]
+    return PREMIUM_PREFIX_WEIGHTS.get(prefix, 0.0)
+
+def get_high_value_digit_ratio(n):
+    """อัตราส่วนของเลข 7/8/9 ในเบอร์"""
+    return sum(1 for d in n if d in HIGH_VALUE_DIGITS) / len(n)
+
+def get_high_value_cluster_score(n):
+    """คะแนน cluster ของเลข 7/8/9 โดยเฉพาะท้ายเบอร์"""
+    cluster_lengths = []
+    current = 0
+    for d in n:
+        if d in HIGH_VALUE_DIGITS:
+            current += 1
+        else:
+            if current:
+                cluster_lengths.append(current)
+            current = 0
+    if current:
+        cluster_lengths.append(current)
+    if not cluster_lengths:
+        return 0
+    max_cluster = max(cluster_lengths)
+    tail_bonus = 0
+    if n[-1] in HIGH_VALUE_DIGITS and n[-2] in HIGH_VALUE_DIGITS:
+        tail_bonus = 1.5
+    return max_cluster * 1.0 + tail_bonus
+
+def get_high_digit_tail_ratio(n, tail_len=4):
+    """อัตราส่วนของเลข 7/8/9 ในท้ายเบอร์"""
+    tail = n[-tail_len:]
+    return sum(1 for d in tail if d in HIGH_VALUE_DIGITS) / tail_len
+
+def get_digit_entropy(n):
+    """คำนวณ entropy ของการกระจายตัวเลข"""
+    freq = Counter(n)
+    total = len(n)
+    entropy = 0.0
+    for count in freq.values():
+        p = count / total
+        entropy -= p * math.log(p + 1e-9, 2)
+    return entropy
+
+def get_pair_diversity_score(n):
+    """คะแนนความหลากหลายของคู่เลขภายในเบอร์"""
+    pairs = [n[i:i+2] for i in range(len(n) - 1)]
+    unique_pairs = len(set(pairs))
+    return unique_pairs / max(len(pairs), 1)
+
+def get_rare_digit_penalty(n):
+    """ลดคะแนนเมื่อใช้เลขที่ไม่นิยม (0, 3, 4) เยอะเกิน"""
+    rare_digits = {'0', '3', '4'}
+    rare_count = sum(1 for d in n if d in rare_digits)
+    return rare_count / len(n)
 
 def get_ending_score(n):
     """คะแนนท้ายเบอร์"""
@@ -1683,6 +1786,21 @@ def create_masterpiece_features(df, market_stats=None):
     df['special_lucky_score_advanced'] = df['phone_number'].apply(get_special_lucky_score_advanced)
     df['market_demand_score'] = df['phone_number'].apply(calculate_market_demand_score)
     df['tier_classification_score'] = df['phone_number'].apply(get_tier_classification_score)
+    df['premium_suffix_score'] = df['phone_number'].apply(get_premium_suffix_score)
+    df['premium_prefix_score'] = df['phone_number'].apply(get_premium_prefix_score)
+    df['high_digit_ratio'] = df['phone_number'].apply(get_high_value_digit_ratio)
+    df['high_digit_tail_ratio'] = df['phone_number'].apply(get_high_digit_tail_ratio)
+    df['high_digit_cluster_score'] = df['phone_number'].apply(get_high_value_cluster_score)
+    df['digit_entropy'] = df['phone_number'].apply(get_digit_entropy)
+    df['pair_diversity_score'] = df['phone_number'].apply(get_pair_diversity_score)
+    df['rare_digit_penalty'] = df['phone_number'].apply(get_rare_digit_penalty)
+    df['premium_signal_strength'] = (
+        df['premium_suffix_score'] * 2.0 +
+        df['high_digit_tail_ratio'] * 5.0 +
+        df['high_digit_cluster_score'] * 1.7 -
+        df['rare_digit_penalty'] * 3.5
+    )
+    df['entropy_adjusted_power'] = df['digit_entropy'] * df['power_sum']
     
     # ============ Market-based Features (No Data Leakage) ============
     if market_stats is not None:
@@ -1699,6 +1817,15 @@ def create_masterpiece_features(df, market_stats=None):
                     features[f'market_avg_price_{length}'] = market_stats['avg_prices'][ending]
                 else:
                     features[f'market_avg_price_{length}'] = market_stats.get('global_median', 5000)
+            # Premium suffix valuation
+            premium_stats = market_stats.get('premium_suffix_stats', {})
+            premium_value = market_stats.get('global_median', 5000)
+            for length in [4, 3, 2]:
+                ending = phone_number[-length:]
+                if ending in premium_stats:
+                    premium_value = premium_stats[ending]
+                    break
+            features['market_premium_suffix_price'] = premium_value
             
             # Pattern popularity
             popularity_sum = 0
@@ -1720,6 +1847,7 @@ def create_masterpiece_features(df, market_stats=None):
         df['market_avg_price_3'] = 5000
         df['market_avg_price_2'] = 5000
         df['market_popularity_score'] = 0
+        df['market_premium_suffix_price'] = 5000
 
     # Power interaction features
     df['power_x_sum'] = df['power_sum'] * df['digit_sum']
@@ -1776,7 +1904,10 @@ def create_masterpiece_features(df, market_stats=None):
         df['position_weighted_score'] * 1.0 +
         df['abc_position_score_advanced'] * 0.8 +
         df['wave_pattern'] * 0.5 +
-        df['number_balance'] * 0.3
+        df['number_balance'] * 0.3 +
+        df['premium_signal_strength'] * 1.8 +
+        df['market_premium_suffix_price'] * 0.0005 -
+        df['rare_digit_penalty'] * 1.2
     )
     
     # Drop phone_number column if it exists
