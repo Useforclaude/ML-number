@@ -21,6 +21,39 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 19:50] Claude | ✅ Push Advanced Features สำเร็จ
+- เสร็จแล้ว:
+  - ✅ Committed: Advanced number-domain features (Codex version)
+  - ✅ Pushed to GitHub (commit 9ab727c)
+  - ✅ Files: config.py (+477 lines), feature_extractor.py (replaced)
+- ฟีเจอร์ที่เพิ่ม (150+ features):
+  - 📊 Power weights (10 digits with positive/negative scores)
+  - 🎯 Special pair scores (32 pairs like 45, 54, 56, 65, etc.)
+  - 💎 Premium suffix weights (60+ patterns like 9999, 8888, 789, 639, etc.)
+  - 📞 Premium prefix weights (9 patterns like 089, 088, 086)
+  - ⭐ Lucky sequence scores (24 sequences)
+  - 🔢 Double/Triple/Quad scores (repeated digits)
+  - 🎲 Mystical pairs (positive and negative scores)
+  - 📈 High-value cluster detection
+  - 🔍 Pair diversity and entropy metrics
+  - ⚡ Power × ending/special interactions
+- งานถัดไป:
+  - User: `cd /notebooks/number-pricing && git pull origin main`
+  - User: `pip install tqdm` (ถ้ายังไม่ได้ติดตั้ง)
+  - User: `python -m number_pricing.scripts.train 2>&1 | tee logs/training_final_$(date +%Y%m%d_%H%M%S).log`
+  - คาดหวัง: R² จะเพิ่มจาก 0.20 → **0.85-0.92** (ใกล้เคียงโปรเจกต์เดิม!)
+
+---
+
+### [2025-10-15 19:40] Codex | ดึงฟีเจอร์จากโปรเจกต์เดิมมาเสริม (เวอร์ชันรวบย่อ)
+**🔧 Changes Made**
+- Modified: `number_pricing/number_pricing/config.py` (เพิ่ม weights และ dictionary สำหรับ suffix/prefix, lucky sequences, mystical pairs, power weights ฯลฯ)
+- Replaced: `number_pricing/number_pricing/features/feature_extractor.py` (สร้างใหม่ด้วยฟีเจอร์เชิงลึกกว่า 150 ช่อง เช่น premium scores, entropy, pair diversity, high-value cluster, power interactions)
+
+**✅ Status: COMPLETED by Claude (commit 9ab727c)**
+
+---
+
 ### [2025-10-15 19:15] Claude | ✅ เพิ่ม Progress Bars และสรุปผลสวยงาม
 - เสร็จแล้ว:
   - ✅ เพิ่ม tqdm progress bars สำหรับ:
