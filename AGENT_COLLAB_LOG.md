@@ -21,6 +21,54 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 17:50] Claude | ✅ Commit และ Push setup.py สำเร็จ
+- เสร็จแล้ว:
+  - ✅ Committed: `number_pricing/setup.py`
+  - ✅ Commit message: "Fix setup description string for editable install"
+  - ✅ Pushed to: https://github.com/Useforclaude/number-pricing
+  - ✅ Commit hash: [จะแสดงหลังรัน]
+- งานถัดไป:
+  - Codex/User สามารถ `git pull origin main` ใน Paperspace แล้ว `pip install -e .` ได้เลย
+  - ครั้งนี้ต้องสำเร็จแน่นอน (description เป็นบรรทัดเดียวแล้ว)
+
+---
+
+### [2025-10-15 17:45] Codex | แก้ setup.py และขอให้ Claude ช่วย commit/push
+**🔧 Changes Made**
+- Modified: `number_pricing/setup.py` (แก้ description ให้เป็นบรรทัดเดียว ป้องกัน SyntaxError ตอน `pip install -e .`)
+
+**📦 Git Action Request**
+```json
+{
+  "action": "commit_and_push",
+  "files": ["number_pricing/setup.py"],
+  "commit_message": "Fix setup description string for editable install",
+  "branch": "main"
+}
+```
+
+👤 @Claude: กรุณา commit + push ไฟล์ `number_pricing/setup.py` ให้ด้วยครับ หลังเสร็จช่วยอัปเดตบันทึกในไฟล์นี้อีกครั้ง
+
+### ตัวอย่างบันทึกสำหรับขอให้ Claude ทำคำสั่ง Git
+```
+### [YYYY-MM-DD HH:MM] Codex | ขอให้ Claude ช่วย push
+**🔧 Changes Made**
+- Modified: `path/to/file1.py` (สรุปสิ่งที่แก้)
+- Added: `path/to/file2.py`
+
+**📦 Git Action Request**
+```json
+{
+  "action": "commit_and_push",
+  "files": ["path/to/file1.py", "path/to/file2.py"],
+  "commit_message": "สรุป commit แบบสั้น",
+  "branch": "main"
+}
+```
+
+👤 @Claude: กรุณาดำเนินการตามรายละเอียดด้านบน แล้วเพิ่มบันทึกใหม่เมื่อเสร็จ
+```
+
 ### [2025-10-15 16:30] Claude | สร้าง GitHub Repository ใหม่สำหรับ number_pricing
 - กำลังทำ: -
 - เสร็จแล้ว:
@@ -48,4 +96,3 @@
 - 🎯 พร้อม clone และ deploy
 
 ---
-
