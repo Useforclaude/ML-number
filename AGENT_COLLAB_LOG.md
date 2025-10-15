@@ -21,6 +21,36 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 20:15] Claude | ✅ ปรับเป็น Single Progress Bar สำเร็จ
+- เสร็จแล้ว:
+  - ✅ แก้ไข `training_pipeline.py` เป็นแถบความคืบหน้าเดียว
+  - ✅ Modified `_cross_validate()`: รับ optional pbar parameter
+  - ✅ Modified `_hyperparameter_search()`:
+    - สร้าง progress bar เดียว: `total = configs × folds` (4 × 5 = 20)
+    - อัปเดต description: `Config X/Y`
+    - แสดง R² และ RMSE real-time ใน postfix
+    - ส่ง pbar ให้ `_cross_validate()` update ทีละ fold
+  - ✅ เพิ่ม progress bar สำหรับ final CV (5 folds)
+  - ✅ Committed และ Pushed (commit ba6603b)
+- ผลลัพธ์:
+  - 📊 แถบความคืบหน้าเดียว ไม่วิ่งหลายบรรทัด
+  - 📈 แสดง: "Training Progress", "Config 1/4", R²=0.xxxx, RMSE=xxx
+  - ⏱️  Total progress: 20 steps (search) + 5 steps (final CV) = 25 steps
+- งานถัดไป:
+  - User ใน Paperspace:
+    ```bash
+    cd /notebooks/number-pricing
+    git pull origin main
+    pip install tqdm  # ถ้ายังไม่ได้ติดตั้ง
+    python -m number_pricing.scripts.train 2>&1 | tee logs/training_single_bar_$(date +%Y%m%d_%H%M%S).log
+    ```
+  - คาดหวัง:
+    - ✅ Progress bar แสดงผลเรียบร้อย ไม่วิ่งหลายบรรทัด
+    - ✅ R² = 0.85-0.92 (advanced features + hyperparameter search)
+    - ✅ Training summary สวยงามตอนจบ
+
+---
+
 ### [2025-10-15 19:50] Claude | ✅ Push Advanced Features สำเร็จ
 - เสร็จแล้ว:
   - ✅ Committed: Advanced number-domain features (Codex version)
