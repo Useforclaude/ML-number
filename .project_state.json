@@ -1,9 +1,9 @@
 {
   "project_name": "ML Phone Number Price Prediction",
-  "version": "4.2.0",
-  "last_updated": "2025-10-11T18:15:00+07:00",
-  "session_id": "session_014",
-  "parent_session": "session_013",
+  "version": "4.3.0",
+  "last_updated": "2025-10-11T23:00:00+07:00",
+  "session_id": "session_015",
+  "parent_session": "session_014",
   "progress": {
     "environment_setup": {
       "status": "completed",
@@ -72,12 +72,17 @@
       "paperspace_persistent": true
     },
     "training": {
-      "status": "ready_to_start",
+      "status": "baseline_established_ready_for_retrain",
       "platforms_supported": ["Kaggle P100", "Paperspace Free (M4000)", "Paperspace Pro (P5000/A4000)"],
-      "expected_r2": "0.85-0.92 (after data filtering + tuple unpacking fix)",
-      "previous_r2_issues": "0.4 (Kaggle), -0.20 (Paperspace) - FIXED!",
-      "fixes_applied": "all_from_session_001_to_013",
-      "critical_fix_applied": "Session 013 - Tuple unpacking bug fixed by Codex"
+      "current_baseline_r2": "0.36-0.44 (RandomForest after data leakage fix)",
+      "expected_r2_after_retrain": "0.70-0.85 (gradient boosting models with premium features)",
+      "previous_r2_issues": "0.9999 validation / -0.026 test (data leakage) - FIXED!",
+      "fixes_applied": "all_from_session_001_to_015",
+      "critical_fixes": [
+        "Session 013 - Tuple unpacking bug fixed by Codex",
+        "Session 015 - Data leakage fix (drop sample_weight) by Claude",
+        "Session 015 - Premium features enhancement by Codex"
+      ]
     },
     "deployment": {
       "status": "pending",
@@ -174,14 +179,40 @@
     "✅ Installed all requirements successfully",
     "✅ Verified imports work correctly on Paperspace",
     "✅ BASE_PATH auto-detected: /storage/number-ML",
-    "✅ Created logs directory for training monitoring"
+    "✅ Created logs directory for training monitoring",
+    "✅ SESSION 015 - DATA LEAKAGE FIX + PREMIUM FEATURES:",
+    "✅ Discovered data leakage: sample_weight (99% feature importance)",
+    "✅ Identified root cause: sample_weight calculated from price (target)",
+    "✅ Fixed data leakage: Dropped sample_weight in src/features.py:1790-1794",
+    "✅ Committed fix to GitHub (commit c513797)",
+    "✅ Verified fix: Test R² went from -0.026 to 0.445 (positive!)",
+    "✅ Verified fix: Predictions now cover full range (231-26,934)",
+    "✅ Analyzed Codex's log-target training approach",
+    "✅ Determined both fixes needed (Claude's + Codex's)",
+    "✅ CODEX PREMIUM FEATURES ENHANCEMENT:",
+    "✅ Added 11+ premium features for high-value number detection",
+    "✅ Enhanced sample weighting (log-scaled + tier-based approach)",
+    "✅ Increased Optuna trials from 150 to 300",
+    "✅ Created diagnostic script: analyze_price_distribution.py",
+    "✅ Fixed summarize_results.py for multi-directory support",
+    "✅ Updated src/features.py with premium pattern features (+230 lines)",
+    "✅ Updated src/data_handler.py with enhanced weighting (+42 lines)",
+    "✅ Updated src/config.py (Optuna trials: 150 → 300)",
+    "✅ Committed enhancements to GitHub (commit e9aacc1)",
+    "✅ Baseline established: R² = 0.36-0.44 (RandomForest)",
+    "✅ Updated all documentation files (checkpoint, project state)"
   ],
   "tasks_pending": [
-    "Upload data file (data/raw/numberdata.csv) to Paperspace",
-    "Run modular training (8-11 hours total)",
-    "Monitor training progress",
-    "Verify R² > 0.90 achievement",
-    "Download trained models",
+    "Pull latest updates to Paperspace (git pull origin main)",
+    "Verify new features: grep 'premium_suffix_score' src/features.py",
+    "Run diagnostic script: python scripts/analyze_price_distribution.py",
+    "Retrain LightGBM with new features (4-6 hours)",
+    "Retrain XGBoost with new features (4-6 hours)",
+    "Retrain CatBoost with new features (3-4 hours)",
+    "Check results: python scripts/summarize_results.py",
+    "Verify R² improvement from 0.36-0.44 to 0.70-0.85",
+    "Create ensemble model (30 minutes)",
+    "Deploy best model",
     "Test model predictions",
     "Update API with trained model",
     "Create Docker deployment files"
@@ -216,9 +247,10 @@
     "session_011f": "R² fixes (fillna + XGBoost version)",
     "session_012": "Data filtering + Modular training scripts",
     "session_013": "CODEX FIX - Tuple unpacking bug (6 training scripts)",
-    "session_014": "Paperspace deployment - Git clone, venv setup, imports verified"
+    "session_014": "Paperspace deployment - Git clone, venv setup, imports verified",
+    "session_015": "DATA LEAKAGE FIX + PREMIUM FEATURES - Drop sample_weight + 11 new features"
   },
-  "all_bugs_fixed_count": 22,
+  "all_bugs_fixed_count": 23,
   "file_summary": {
     "new_files_session_012": [
       "src/data_filter.py",
@@ -256,17 +288,54 @@
       "setup_complete": true,
       "imports_verified": true,
       "ready_for_training": true
+    },
+    "session_015_fixes_and_enhancements": {
+      "data_leakage_fix": {
+        "file": "src/features.py (lines 1790-1794)",
+        "fix": "Drop sample_weight column",
+        "commit": "c513797",
+        "impact": "Test R² from -0.026 to 0.445"
+      },
+      "premium_features_enhancement": {
+        "files_modified": [
+          "src/features.py (+230 lines)",
+          "src/data_handler.py (+42 lines)",
+          "src/config.py (+1 line)"
+        ],
+        "files_added": [
+          "scripts/analyze_price_distribution.py",
+          "scripts/summarize_results.py (enhanced)"
+        ],
+        "commit": "e9aacc1",
+        "features_added": 11,
+        "feature_count": "150 → 161",
+        "optuna_trials": "150 → 300"
+      },
+      "training_results": {
+        "randomforest_baseline": {
+          "validation_r2": 0.363,
+          "test_r2": 0.445,
+          "status": "Baseline established"
+        }
+      },
+      "expected_improvement": {
+        "current": "R² = 0.36-0.44",
+        "after_retrain": "R² = 0.70-0.85"
+      }
     }
   },
   "next_session_quickstart": {
     "paperspace": {
-      "step_1": "cd /notebooks/ML-number",
-      "step_2": "source .venv/bin/activate",
-      "step_3": "Upload data/raw/numberdata.csv to Paperspace",
-      "step_4": "nohup python training/modular/train_xgboost_only.py > logs/xgb.log 2>&1 &",
-      "step_5": "Continue with other models...",
-      "step_6": "python training/modular/train_ensemble_only.py (final)",
-      "note": "Paperspace path: /notebooks/ML-number (persistent across sessions)"
+      "step_1": "cd /notebooks/ML-number && source .venv/bin/activate",
+      "step_2": "git pull origin main (get commits c513797 + e9aacc1)",
+      "step_3": "grep 'premium_suffix_score' src/features.py (verify update)",
+      "step_4": "python scripts/analyze_price_distribution.py (run diagnostics)",
+      "step_5": "python training/modular/train_lightgbm_only.py 2>&1 | tee logs/lgb_v2.log (4-6h)",
+      "step_6": "python training/modular/train_xgboost_only.py 2>&1 | tee logs/xgb_v2.log (4-6h)",
+      "step_7": "python training/modular/train_catboost_only.py 2>&1 | tee logs/cat_v2.log (3-4h)",
+      "step_8": "python scripts/summarize_results.py (check R² improvement)",
+      "step_9": "python training/modular/train_ensemble_only.py (if R² > 0.70)",
+      "note": "Expected R² improvement: 0.36-0.44 → 0.70-0.85 after retrain with premium features"
     },
     "local": {
       "step_1": "cd /home/u-and-an/projects/number-ML",
@@ -283,5 +352,30 @@
     "fixed_by": "Codex",
     "status": "FIXED ✅",
     "expected_r2_after_fix": "0.85-0.92"
+  },
+  "session_015_critical_fix": {
+    "bug": "Data leakage - sample_weight column (99% feature importance)",
+    "root_cause": "sample_weight calculated from price (target variable)",
+    "symptoms": {
+      "validation_r2": "0.9999 (impossibly perfect)",
+      "test_r2": "-0.026 (negative - worse than baseline)",
+      "predictions": "1200-1481 (constant values)",
+      "top_feature": "sample_weight (99% importance)"
+    },
+    "fix": "Drop sample_weight in src/features.py:1790-1794",
+    "fixed_by": "Claude (with Codex's log-target enhancement)",
+    "commits": ["c513797 (Claude)", "e9aacc1 (Codex)"],
+    "status": "FIXED ✅",
+    "verification": {
+      "test_r2": "0.445 (positive - fix works!)",
+      "predictions": "231-26,934 (full range!)",
+      "no_overfitting": "validation-test diff = 0.082 (<0.10)"
+    },
+    "enhancements_added": {
+      "premium_features": 11,
+      "sample_weighting": "log-scaled + tier-based",
+      "optuna_trials": "150 → 300"
+    },
+    "expected_r2_after_retrain": "0.70-0.85 (gradient boosting with premium features)"
   }
 }

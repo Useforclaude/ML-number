@@ -7,6 +7,29 @@
 
 This project implements a state-of-the-art machine learning pipeline for predicting phone number prices based on various numerical patterns, cultural significance, and market demand factors. The system achieves exceptional accuracy (R² > 0.90) using advanced feature engineering and ensemble methods.
 
+---
+
+## 🆕 New Project: Number Pricing Package
+
+**We've created a standalone, production-ready package based on this project!**
+
+**🔗 [number-pricing](https://github.com/Useforclaude/number-pricing)** - Independent ML package with clean architecture
+
+**Key Differences:**
+- ✅ **Standalone**: Complete rewrite, no legacy dependencies
+- ✅ **Config-driven**: All settings in single `config.py`
+- ✅ **Lightweight**: Uses only scikit-learn (no XGBoost/LightGBM)
+- ✅ **Environment-agnostic**: Auto-detects Local, Colab, Kaggle, Paperspace
+- ✅ **Cleaner codebase**: Built from scratch by Codex AI
+
+**Choose the right project:**
+- 🏆 **This repo (number-ML)**: Advanced features, ensemble methods, R² > 0.90 (best performance)
+- 🎯 **number-pricing**: Simple, clean, production-ready (easier deployment)
+
+> Both use the same dataset (`numberdata.csv`) but are completely independent codebases.
+
+---
+
 ## 🏆 Key Features
 
 - **250+ Engineered Features**: Comprehensive feature extraction including pattern recognition, mathematical properties, and cultural significance

@@ -1,5 +1,15 @@
 # Repository Guidelines
 
+## Additional Agent Rules
+- ต้องตอบผู้ใช้เป็นภาษาไทยทุกครั้งตั้งแต่เซสชันนี้เป็นต้นไป
+- ก่อนเริ่มงานหรือรันคำสั่งสำคัญ ต้องอ่านสถานะล่าสุดใน `AGENT_COLLAB_LOG.md`
+
+## Current Engagement Notes
+- มีการสร้างแพ็กเกจใหม่ `number_pricing/` สำหรับงานทำนายราคาหมายเลขโทรศัพท์ โดยคอนฟิกทั้งหมดอยู่ที่ `number_pricing/config.py`
+- สคริปต์สำหรับเทรนและพยากรณ์รุ่นใหม่อยู่ที่ `number_pricing/scripts/train.py` และ `number_pricing/scripts/predict.py`
+- ไฟล์ README ภายในโฟลเดอร์ `number_pricing/` สรุปโครงสร้าง โมดูล และวิธีใช้งานแบบย่อ
+- ไฟล์สื่อสารระหว่างเอเจนต์อยู่ที่ `AGENT_COLLAB_LOG.md` ให้ทั้งสองฝั่งอัปเดตและอ่านบันทึกล่าสุดเสมอ
+
 ## Project Structure & Module Organization
 - `src/` contains the feature engineering, model utilities, evaluation, and configuration modules that power training and inference.
 - `training/main.py` runs the end-to-end pipeline; `training/modular/` holds entry points for partial workflows, and `training/train_terminal.py` supports CLI-driven sessions.

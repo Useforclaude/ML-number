@@ -1,372 +1,418 @@
 # 🎯 NEXT SESSION GUIDE
 
-**Last Updated**: 2025-10-11 18:15
-**Session**: 014 - Paperspace Deployment Complete
-**Status**: ✅ READY FOR TRAINING!
+**Last Updated**: 2025-10-11 23:00
+**Session**: 016 - Retrain with Premium Features
+**Status**: ✅ DATA LEAKAGE FIXED + PREMIUM FEATURES ADDED!
 
 ---
 
-## ✅ SESSION 014 - PAPERSPACE DEPLOYMENT COMPLETE
+## ✅ SESSION 015 - DATA LEAKAGE FIX + PREMIUM FEATURES COMPLETE
 
 ### 🚀 What Was Done:
 
-1. **Git Push to GitHub** ✅
-   - Commit: `40a9e65`
-   - Session 013 documentation + project refactor
-   - 76 files changed (+4,573 insertions, -244 deletions)
+#### **1. Data Leakage Fix** 🔴 (CRITICAL!)
 
-2. **Paperspace Setup** ✅
-   - Path: `/notebooks/ML-number`
-   - Git cloned from: https://github.com/Useforclaude/ML-number.git
-   - Virtual environment created: `.venv`
-   - All requirements installed ✅
-   - Imports verified ✅
-   - BASE_PATH detected: `/storage/number-ML` ✅
+**Problem Discovered:**
+- RandomForest achieved R² = 0.9999 (impossibly perfect)
+- Test R² = -0.026 (negative!)
+- Predictions: 1200-1481 (constant values)
+- Root cause: `sample_weight` column (99% feature importance)
 
-3. **Key Benefits** 🎯
-   - **Persistent storage**: Files in `/notebooks/` won't be deleted when session expires (unlike Colab/Kaggle)
-   - **All Codex fixes included**: Tuple unpacking bug fixed in all 6 training scripts
-   - **Ready to train**: Just need to upload data file
+**Why This Was Leakage:**
+```python
+# sample_weight was calculated FROM price (the target!)
+sample_weights = calculate_from_price(df['price'])
+df['sample_weight'] = sample_weights  # ← This is the target!
+
+# Then used as a feature:
+X_train = df[['sample_weight', ...]]  # ← Model learns: price = f(sample_weight) 🚨
+y_train = df['price']                  # ← Perfect correlation!
+```
+
+**Fix Applied (commit c513797):**
+```python
+# src/features.py:1790-1794
+if 'sample_weight' in df.columns:
+    df = df.drop('sample_weight', axis=1)
+    print("   ⚠️  Removed 'sample_weight' feature (data leakage prevention)")
+```
+
+**Verification:**
+- ✅ Test R²: -0.026 → 0.445 (positive!)
+- ✅ Predictions: 231-26,934 (full range!)
+- ✅ No overfitting (validation-test diff = 0.082 < 0.10)
+- ✅ Log message: "⚠️ Removed 'sample_weight' feature"
+
+#### **2. Codex's Premium Features Enhancement** 💎
+
+**Added 11+ Features for High-Value Number Detection:**
+- Premium suffix weights (8888, 9999, 168, etc.)
+- Premium prefix weights (089, 088, etc.)
+- High-value digit ratios (7, 8, 9)
+- Digit entropy & pair diversity
+- Cluster scores & tail ratios
+
+**Enhanced Sample Weighting:**
+```python
+# BEFORE (Session 014): Simple exponential
+sample_weights = np.exp(alpha * price_percentile)
+
+# AFTER (Session 015): Log-scaled + tier-based
+base_weight = 0.6 + 1.7 * np.power(log_scaled, 1.25)
+tier_boost = np.select([
+    prices >= 50000,  # ×2.0
+    prices >= 20000,  # ×1.2
+    prices >= 10000,  # ×0.8
+    prices >= 5000    # ×0.4
+], ...)
+```
+
+**Increased Optuna Trials:**
+- Before: 150 trials
+- After: 300 trials (deeper hyperparameter search)
+
+**New Tools Added:**
+- `scripts/analyze_price_distribution.py` - Diagnostic tool
+- Enhanced `scripts/summarize_results.py` - Multi-directory support
+
+**Files Modified (commit e9aacc1):**
+- `src/features.py` (+230 lines)
+- `src/data_handler.py` (+42 lines)
+- `src/config.py` (+1 line)
+
+#### **3. Training Baseline Established** 📊
+
+**RandomForest Results (after fix):**
+- Validation R²: 0.363
+- Test R²: 0.445 ✅
+- MAE: 751.54
+- RMSE: 1606.57
+- Training time: 52 minutes
+
+**Current Status:**
+- ✅ Data leakage FIXED
+- ✅ Test R² now positive (0.445)
+- ✅ Predictions cover full range
+- ✅ No overfitting detected
+- ⚠️ RandomForest not suitable for this dataset (too simple)
 
 ---
 
-## 📋 CRITICAL: Paperspace Environment Info (บันทึกไว้!)
+## 🎯 SESSION 016 - PULL UPDATES & RETRAIN
 
-```bash
-# Paperspace Paths (MUST REMEMBER!)
-PROJECT_PATH="/notebooks/ML-number"
-BASE_PATH="/storage/number-ML"  # Auto-detected by config
-VENV_PATH="/notebooks/ML-number/.venv"
-LOGS_PATH="/notebooks/ML-number/logs"
-
-# Key Feature: Persistent Storage ✅
-# ไฟล์ที่ /notebooks/ ไม่โดนลบเมื่อ session หมดเวลา
-# (ต่างจาก Colab/Kaggle ที่ลบทุกครั้ง!)
-
-# Git Remote
-GIT_REMOTE="https://github.com/Useforclaude/ML-number.git"
-```
+### **Critical Context:**
+Session 015 added **161 features** (was 150) + **enhanced sample weighting** + **300 Optuna trials** (was 150).
+Current baseline: **R² = 0.36-0.44** (RandomForest)
+Expected after retrain: **R² = 0.70-0.85** (gradient boosting models)
 
 ---
 
-## 🎯 NEXT STEPS (Session 015)
+## 📋 STEP-BY-STEP GUIDE
 
-### **Step 1: Upload Data File** ⬆️
-
-**Option A: Web Upload (Easiest)**
-```bash
-# In Paperspace:
-# 1. Click "Upload" button in file browser
-# 2. Navigate to local: /home/u-and-an/projects/number-ML/data/raw/numberdata.csv
-# 3. Upload to Paperspace: /notebooks/ML-number/data/raw/
-# 4. Verify:
-(.venv) root@xxx:/notebooks/ML-number# ls -lh data/raw/numberdata.csv
-# Expected: ~93 KB file
-```
-
-**Option B: SCP Upload (Alternative)**
-```bash
-# From local machine:
-scp /home/u-and-an/projects/number-ML/data/raw/numberdata.csv \
-    root@paperspace:/notebooks/ML-number/data/raw/
-```
-
-### **Step 2: Install PyTorch (ครั้งแรกเท่านั้น!)** 🔧
+### **Step 1: Pull Latest Updates to Paperspace** ⬇️
 
 ```bash
+# Connect to Paperspace
+# Navigate to project
 cd /notebooks/ML-number
 source .venv/bin/activate
 
-# Install PyTorch (required for GPU detection)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# Pull latest commits
+git pull origin main
+# Expected: commits c513797 + e9aacc1
 
-# Verify installation
-python -c "import torch; print(f'✅ PyTorch {torch.__version__} installed')"
+# Verify updates
+git log --oneline -3
+# Should show:
+# e9aacc1 Enhance features and sample weighting for high-value numbers
+# c513797 Fix data leakage: Drop sample_weight from features
+# 40a9e65 (previous commit)
 ```
 
-**Note**: ต้องทำครั้งเดียวตอนแรก! Session ถัดไปไม่ต้องติดตั้งอีก
-
-### **Step 3: Verify Setup** ✅
+### **Step 2: Verify New Features** ✅
 
 ```bash
-# Activate venv
+# Check premium features exist
+grep -n "premium_suffix_score" src/features.py
+# Expected: Should find function definition
+
+grep -n "PREMIUM_SUFFIX_WEIGHTS" src/features.py
+# Expected: Line ~20-80 with weight dictionary
+
+grep -n "HIGH_VALUE_DIGITS" src/features.py
+# Expected: HIGH_VALUE_DIGITS = {'7', '8', '9'}
+
+# Check Optuna trials increased
+grep -n "optuna_trials" src/config.py
+# Expected: 'optuna_trials': 300
+
+# Check sample_weight removed from features
+grep -n "Drop sample_weight" src/features.py
+# Expected: Line ~1790-1794 with drop logic
+```
+
+### **Step 3: Run Diagnostic Script** 🔍
+
+```bash
+# Analyze data distribution & premium patterns
+python scripts/analyze_price_distribution.py
+
+# Expected output:
+# 📊 PRICE & PATTERN DIAGNOSTICS
+# Total cleaned samples: 6,100
+# Price range: ฿100 - ฿90,000
+#
+# 🎯 Price band summary
+# ฿0 - ฿499      : 2,xxx numbers (xx.x%)
+# ...
+#
+# 💎 Premium suffix coverage
+# 8888   : xx numbers (x.xx%)
+# 9999   : xx numbers (x.xx%)
+# ...
+#
+# 🔥 High digit tail density (7/8/9 in last 4 digits)
+# Tail ratio ≥ 0.25 : xx.xx% of numbers
+# ...
+```
+
+### **Step 4: Clear Old Checkpoints (Optional)** 🧹
+
+```bash
+# Check existing checkpoints
+ls -lh models/checkpoints/
+
+# If you want fresh training (recommended), remove old checkpoints:
+rm models/checkpoints/xgboost_checkpoint.pkl
+rm models/checkpoints/lightgbm_checkpoint.pkl
+rm models/checkpoints/catboost_checkpoint.pkl
+# Keep RandomForest as baseline comparison
+```
+
+---
+
+## 🚀 TRAINING STRATEGY
+
+### **⚠️ IMPORTANT: Training Time Estimates**
+- **LightGBM**: 4-6 hours (300 trials)
+- **XGBoost**: 4-6 hours (300 trials)
+- **CatBoost**: 3-4 hours (300 trials)
+- **Ensemble**: 30 minutes
+- **Total**: 12-19 hours
+
+**Paperspace Free = 6-hour auto-shutdown!**
+→ Must split into **3-4 sessions**
+
+---
+
+### **SESSION 016A: LightGBM (4-6 hours)**
+
+```bash
 cd /notebooks/ML-number
 source .venv/bin/activate
 
 # Check data file exists
 ls -lh data/raw/numberdata.csv
-# Expected: ~93 KB, 6,112 rows
+# Expected: ~93 KB
 
-# Test data loading (CRITICAL!)
-python -c "
-from src.data_handler import load_and_clean_data
-df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
-print(f'✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows')
-"
-# Expected output: "✅ Data loaded: raw=6112 rows, cleaned=6100 rows"
+echo "=== SESSION 016A: LightGBM with Premium Features ==="
+python training/modular/train_lightgbm_only.py 2>&1 | tee logs/lgb_v2.log
+
+# Monitor progress
+tail -f logs/lgb_v2.log
+
+# After completion, check results
+grep "R²" logs/lgb_v2.log
+grep "Test R²" logs/lgb_v2.log
+ls -lh models/checkpoints/lightgbm_checkpoint.pkl
 ```
 
-### **Step 3: Start Training** 🚀
+**Expected Results:**
+- Validation R²: 0.75-0.85 (up from 0.36)
+- Test R²: 0.70-0.80 (up from 0.44)
+- No overfitting (diff < 0.10)
 
-**⚠️ IMPORTANT: Paperspace Free = 6-hour auto-shutdown!**
-- Must run **sequentially** (one by one), NOT parallel
-- Split into 3 sessions to avoid timeout
-- See: `docs/guides/paperspace/PAPERSPACE_6HR_TRAINING_STRATEGY.md`
+---
 
-#### **SESSION 1: Fast Models (~5 hours)**
+### **SESSION 016B: XGBoost (4-6 hours)**
+
 ```bash
 cd /notebooks/ML-number
 source .venv/bin/activate
 
-# Run ONE by ONE (sequential, not parallel!)
-echo "=== SESSION 1: Fast Models ==="
+# Verify LightGBM checkpoint exists
+ls -lh models/checkpoints/lightgbm_checkpoint.pkl
 
-# Step 1: XGBoost (2-3h)
-python training/modular/train_xgboost_only.py 2>&1 | tee logs/xgb.log
+echo "=== SESSION 016B: XGBoost with Premium Features ==="
+python training/modular/train_xgboost_only.py 2>&1 | tee logs/xgb_v2.log
 
-# Step 2: CatBoost (1-2h)
-python training/modular/train_catboost_only.py 2>&1 | tee logs/cat.log
+# Monitor progress
+tail -f logs/xgb_v2.log
 
-# Step 3: RandomForest (1h)
-python training/modular/train_rf_only.py 2>&1 | tee logs/rf.log
-
-echo "✅ SESSION 1 COMPLETE!"
-ls -lh models/checkpoints/
-```
-
-**Verify Data Loading (CRITICAL!):**
-```bash
-grep "Data loaded" logs/*.log
-# Expected: "✅ Data loaded: raw=6112 rows, cleaned=6100 rows"
-```
-
-#### **SESSION 2: Slow Model (~4 hours)**
-```bash
-cd /notebooks/ML-number
-source .venv/bin/activate
-
-# Verify Session 1 checkpoints
+# After completion
+grep "R²" logs/xgb_v2.log
 ls -lh models/checkpoints/xgboost_checkpoint.pkl
-ls -lh models/checkpoints/catboost_checkpoint.pkl
-ls -lh models/checkpoints/random_forest_checkpoint.pkl
-
-echo "=== SESSION 2: Slow Model ==="
-
-# LightGBM (3-4h - longest model)
-python training/modular/train_lightgbm_only.py 2>&1 | tee logs/lgb.log
-
-echo "✅ SESSION 2 COMPLETE!"
-ls -lh models/checkpoints/
 ```
 
-#### **SESSION 3: Ensemble (~30 minutes)**
+**Expected Results:**
+- Validation R²: 0.73-0.83
+- Test R²: 0.70-0.80
+
+---
+
+### **SESSION 016C: CatBoost (3-4 hours)**
+
 ```bash
 cd /notebooks/ML-number
 source .venv/bin/activate
 
-# Verify ALL 4 checkpoints exist
+# Verify XGBoost checkpoint exists
+ls -lh models/checkpoints/xgboost_checkpoint.pkl
+
+echo "=== SESSION 016C: CatBoost with Premium Features ==="
+python training/modular/train_catboost_only.py 2>&1 | tee logs/cat_v2.log
+
+# Monitor progress
+tail -f logs/cat_v2.log
+
+# After completion
+grep "R²" logs/cat_v2.log
+ls -lh models/checkpoints/catboost_checkpoint.pkl
+```
+
+**Expected Results:**
+- Validation R²: 0.70-0.80
+- Test R²: 0.68-0.78
+
+---
+
+### **SESSION 016D: Results Summary + Ensemble (30 min)**
+
+```bash
+cd /notebooks/ML-number
+source .venv/bin/activate
+
+# Verify ALL 4 model checkpoints exist
 ls -lh models/checkpoints/*.pkl
-# Should show 4 files
+# Expected: 4 files (LightGBM, XGBoost, CatBoost, RandomForest)
 
-echo "=== SESSION 3: Ensemble ==="
+echo "=== Results Summary ==="
+python scripts/summarize_results.py
 
-# Create ensemble (15-30 min)
-python training/modular/train_ensemble_only.py 2>&1 | tee logs/ensemble.log
+# Expected output:
+# 📊 TRAINING RESULTS SUMMARY
+# ✅ LightGBM    | Val R²=0.xxxx | Test R²=0.xxxx | ...
+# ✅ XGBoost     | Val R²=0.xxxx | Test R²=0.xxxx | ...
+# ✅ CatBoost    | Val R²=0.xxxx | Test R²=0.xxxx | ...
+# ✅ RandomForest| Val R²=0.3630 | Test R²=0.4450 | ... (baseline)
+#
+# 🏆 BEST MODEL: LightGBM (or XGBoost)
+# Expected R²: 0.75-0.85
 
-echo "✅ ALL TRAINING COMPLETE!"
-ls -lh models/deployed/best_model.pkl
+# If R² > 0.70, create ensemble
+if [ R² is good ]; then
+    echo "=== Creating Ensemble ==="
+    python training/modular/train_ensemble_only.py 2>&1 | tee logs/ensemble_v2.log
+
+    # Check deployed model
+    ls -lh models/deployed/best_model.pkl
+fi
 ```
 
-### **Step 4: Monitor Training** 👀
-
-```bash
-# Check running processes
-ps aux | grep train_
-
-# Monitor logs
-tail -f logs/xgb.log       # XGBoost progress
-tail -f logs/lgb.log       # LightGBM progress
-tail -f logs/cat.log       # CatBoost progress
-tail -f logs/rf.log        # RandomForest progress
-
-# Check GPU usage (if available)
-watch -n 5 nvidia-smi
-
-# Check data loading confirmation (VERIFY CODEX FIX!)
-grep "Data loaded" logs/*.log
-# MUST show: raw=6112, cleaned=6100
-```
-
-### **Step 5: After Training Complete** ✅
-
-```bash
-# Check R² scores
-grep "R²" logs/*.log
-grep "Test R²" logs/*.log
-
-# Expected Results (after Codex fix):
-# XGBoost:     R² ~0.88-0.92 ✅
-# LightGBM:    R² ~0.86-0.90 ✅
-# CatBoost:    R² ~0.85-0.89 ✅
-# RandomForest: R² ~0.82-0.86 ✅
-
-# Check checkpoints saved
-ls -lh models/checkpoints/
-# Expected: xgboost_checkpoint.pkl, lightgbm_checkpoint.pkl, etc.
-
-# Run ensemble (final step)
-python training/modular/train_ensemble_only.py
-
-# Check deployed model
-ls -lh models/deployed/best_model.pkl
-# Expected: Best model from ensemble
-```
+**Expected Ensemble Results:**
+- Validation R²: 0.78-0.88
+- Test R²: 0.75-0.85
 
 ---
 
-## 📊 Expected Timeline
-
-```
-XGBoost:     2-3 hours  → checkpoint saved
-LightGBM:    3-4 hours  → checkpoint saved
-CatBoost:    1-2 hours  → checkpoint saved
-RandomForest: 1 hour    → checkpoint saved
-Ensemble:    15-30 min  → best model deployed
-────────────────────────────────────────────
-Total:       8-11 hours (can run in parallel!)
-```
-
----
-
-## 🔍 Verification Checklist
+## 📊 VERIFICATION CHECKLIST
 
 ### Before Training:
-- [x] Code pushed to GitHub (commit 40a9e65) ✅
-- [x] Code cloned to Paperspace ✅
-- [x] Virtual environment created ✅
-- [x] Requirements installed ✅
-- [x] Imports verified ✅
-- [x] BASE_PATH detected (/storage/number-ML) ✅
-- [x] Logs directory created ✅
-- [ ] Data file uploaded to Paperspace
-- [ ] Data loading tested (verify raw=6112, cleaned=6100)
+- [ ] Git pulled (commits c513797 + e9aacc1)
+- [ ] Premium features verified (`grep premium_suffix_score src/features.py`)
+- [ ] Optuna trials = 300 (`grep optuna_trials src/config.py`)
+- [ ] sample_weight removed (`grep "Drop sample_weight" src/features.py`)
+- [ ] Diagnostic script runs successfully
 
 ### During Training:
-- [ ] Logs show: "✅ Data loaded: raw=6112 rows, cleaned=6100 rows" (confirms Codex fix!)
-- [ ] No ValueError or TypeError
-- [ ] GPU active (if available)
-- [ ] Checkpoints saving to models/checkpoints/
+- [ ] No ValueError or data leakage errors
+- [ ] Optuna shows 300 trials (not 150)
 - [ ] R² improving during optimization
+- [ ] Log shows: "⚠️ Removed 'sample_weight' feature"
 
 ### After Training:
-- [ ] All 4 model checkpoints saved
-- [ ] R² scores logged and ≥ 0.85
-- [ ] Ensemble created successfully
-- [ ] Best model deployed to models/deployed/
-- [ ] Can download trained models
+- [ ] R² improved from 0.36-0.44 to 0.70-0.85
+- [ ] Test R² positive and reasonable
+- [ ] No overfitting (validation-test diff < 0.10)
+- [ ] All model checkpoints saved
+- [ ] Best model deployed
 
 ---
 
-## 🚨 CRITICAL: Data Loading Verification
+## 🚨 CRITICAL: Data Leakage Verification
 
-**WHY THIS IS CRITICAL:**
+**MUST verify these EVERY training run:**
 
-Session 013 fixed a bug where training scripts would crash or use wrong data format:
-
-```python
-# ❌ BEFORE (Bug - Session 012):
-df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
-# Result: df_cleaned = tuple (df_raw, df_cleaned) ← WRONG!
-# Impact: Training fails OR uses unfiltered data (R² = 0.4)
-
-# ✅ AFTER (Fixed - Session 013 by Codex):
-df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
-logger.info(f"✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows")
-# Result: df_cleaned = DataFrame with filtered data ← CORRECT!
-# Impact: Training succeeds with R² = 0.85-0.92 ✅
-```
-
-**VERIFICATION COMMAND (Run this FIRST!):**
 ```bash
-grep "Data loaded" logs/*.log
-# MUST see: "✅ Data loaded: raw=6112 rows, cleaned=6100 rows"
-# If you see this, Codex fix is working! ✅
-# If you DON'T see this, STOP and debug!
+# Check logs for sample_weight removal
+grep "Removed 'sample_weight' feature" logs/*.log
+# Expected: Should appear in ALL training logs
+
+# Check feature count
+grep "Created .* features" logs/*.log
+# Expected: "Created 161 features" (was 150 before Session 015)
+
+# Verify no data leakage
+python scripts/check_leakage.py
+# Expected: No features with >90% importance
+# Expected: Test R² should be positive
 ```
 
 ---
 
-## 🎯 Success Criteria
+## 📈 EXPECTED R² IMPROVEMENT
 
-**Training is SUCCESSFUL if:**
-- ✅ Logs show: `raw=6112 rows, cleaned=6100 rows` (confirms Codex fix works!)
-- ✅ No ValueError or TypeError during execution
-- ✅ All 4 model checkpoints saved to models/checkpoints/
-- ✅ R² score ≥ 0.85 (target: 0.90+)
-- ✅ Best model deployed to models/deployed/best_model.pkl
+| Model        | Before (Session 015) | After (Session 016) | Improvement |
+|--------------|---------------------|---------------------|-------------|
+| RandomForest | 0.36-0.44          | 0.36-0.44          | N/A (baseline) |
+| LightGBM     | Not trained        | 0.75-0.85          | +0.35-0.45 |
+| XGBoost      | Not trained        | 0.73-0.83          | +0.35-0.45 |
+| CatBoost     | Not trained        | 0.70-0.80          | +0.30-0.40 |
+| **Ensemble** | Not trained        | **0.78-0.88**      | **+0.40-0.50** |
 
-**Training FAILED if:**
-- ❌ ValueError: "too many values to unpack" (Codex fix not applied)
-- ❌ R² still around 0.4 (using unfiltered data - bug not fixed)
-- ❌ Missing checkpoints or process crashes
-- ❌ Import errors or dependency issues
-
----
-
-## 🔄 Recovery Commands (If Needed)
-
-### If Git Pull Needed:
-```bash
-cd /notebooks/ML-number
-git fetch origin
-git reset --hard origin/main
-```
-
-### If Imports Fail:
-```bash
-cd /notebooks/ML-number
-source .venv/bin/activate
-pip install -r requirements.txt --upgrade
-```
-
-### If Training Crashes:
-```bash
-# Check which checkpoint exists
-ls -lh models/checkpoints/
-
-# Resume from next model
-# Example: If XGBoost done, continue with LightGBM
-nohup python training/modular/train_lightgbm_only.py > logs/lgb.log 2>&1 &
-```
-
-### If Data File Missing:
-```bash
-# Re-upload from local
-scp /home/u-and-an/projects/number-ML/data/raw/numberdata.csv \
-    root@paperspace:/notebooks/ML-number/data/raw/
-```
+**Why Improvement Expected:**
+1. ✅ Data leakage fixed (test R² now positive)
+2. ✅ 11+ premium features added for high-value detection
+3. ✅ Enhanced sample weighting (tier-based)
+4. ✅ 300 Optuna trials (deeper search)
+5. ✅ Gradient boosting models (XGBoost, LightGBM, CatBoost)
 
 ---
 
-## 📚 Monitoring Commands Reference
+## 🔄 MONITORING COMMANDS
 
 ```bash
 # Check running processes
 ps aux | grep train_
 
 # Monitor specific log
-tail -f logs/xgb.log
-
-# Check all logs for errors
-grep -i "error" logs/*.log
-
-# Check data loading (CRITICAL!)
-grep "Data loaded" logs/*.log
+tail -f logs/lgb_v2.log
+tail -f logs/xgb_v2.log
+tail -f logs/cat_v2.log
 
 # Check R² progress
+grep "Best trial" logs/lgb_v2.log | tail -5
 grep "R²" logs/*.log
 
-# Check GPU usage
+# Check feature count
+grep "Created .* features" logs/*.log
+# Expected: 161 features
+
+# Check sample_weight removal
+grep "sample_weight" logs/*.log
+# Expected: "⚠️ Removed 'sample_weight' feature"
+
+# Check GPU usage (if available)
 watch -n 5 nvidia-smi
 
 # Check disk space
@@ -374,148 +420,126 @@ df -h /storage
 
 # Check memory usage
 free -h
-
-# Check checkpoints
-ls -lh models/checkpoints/
-
-# Check deployed model
-ls -lh models/deployed/
 ```
 
 ---
 
-## 📝 Key Files & Paths (Paperspace)
+## 🔧 TROUBLESHOOTING
 
-### Project Structure:
-```
-/notebooks/ML-number/
-├── training/modular/          # Training scripts (5 files)
-│   ├── train_xgboost_only.py
-│   ├── train_lightgbm_only.py
-│   ├── train_catboost_only.py
-│   ├── train_rf_only.py
-│   └── train_ensemble_only.py
-├── data/raw/                  # Data files
-│   └── numberdata.csv         # Upload this!
-├── models/
-│   ├── checkpoints/           # Model checkpoints
-│   └── deployed/              # Best model
-├── logs/                      # Training logs
-├── src/                       # Core code
-├── .venv/                     # Virtual environment (persistent!)
-└── requirements.txt
+### If Git Pull Shows No Updates:
+```bash
+git fetch origin
+git status
+# If behind: git pull origin main
+# If conflicts: git reset --hard origin/main
 ```
 
-### Important Paths:
-- **Project**: `/notebooks/ML-number`
-- **Data**: `/notebooks/ML-number/data/raw/numberdata.csv`
-- **Venv**: `/notebooks/ML-number/.venv`
-- **Logs**: `/notebooks/ML-number/logs/`
-- **Checkpoints**: `/notebooks/ML-number/models/checkpoints/`
-- **Deployed**: `/notebooks/ML-number/models/deployed/`
+### If Features Not Updated:
+```bash
+# Check current commit
+git log --oneline -3
+
+# Should show c513797 and e9aacc1
+# If not, force pull:
+git fetch origin
+git reset --hard origin/main
+```
+
+### If R² Still Low After Retrain:
+```bash
+# Check feature count
+grep "Created .* features" logs/*.log
+# Should be 161, not 150
+
+# Check sample_weight removed
+grep "sample_weight" logs/*.log
+# Should show removal message
+
+# Run diagnostic
+python scripts/check_leakage.py
+```
+
+### If Training Too Slow:
+```bash
+# Check Optuna trials
+grep "optuna_trials" src/config.py
+# If 300 is too slow, can reduce to 200
+
+# Or train one model at a time
+# (recommended for Paperspace Free 6-hour limit)
+```
 
 ---
 
-## 🎯 Session 015 Quick Start (Copy-Paste)
+## 📚 DOCUMENTATION REFERENCES
 
-### **⚠️ IMPORTANT: Paperspace = 6-hour limit!**
-Run sequentially, split into 3 sessions:
+- **Session 015 Summary**: `checkpoints/checkpoint_latest.json`
+- **Data Leakage Fix**: commit c513797
+- **Premium Features**: commit e9aacc1
+- **Codex Case Studies**: `CLAUDE.md`
+- **Project State**: `.project_state.json`
 
-#### **SESSION 1 (Copy-Paste - 5 hours):**
+---
+
+## ✅ SUCCESS CRITERIA
+
+**Session 016 is SUCCESSFUL if:**
+- ✅ Git pulled successfully (commits c513797 + e9aacc1)
+- ✅ Diagnostic script shows premium features exist
+- ✅ All 3 models trained (LightGBM, XGBoost, CatBoost)
+- ✅ R² improved from 0.36-0.44 to 0.70-0.85
+- ✅ Test R² positive and reasonable
+- ✅ No overfitting detected (diff < 0.10)
+- ✅ Ensemble created with R² > 0.75
+- ✅ Best model deployed
+
+**Session 016 FAILED if:**
+- ❌ R² still around 0.36-0.44 (features not updated)
+- ❌ Test R² negative (data leakage still exists)
+- ❌ Feature count still 150 (not 161)
+- ❌ sample_weight not removed
+- ❌ Overfitting detected (validation >> test)
+
+---
+
+## 🎯 QUICK START (Copy-Paste)
+
+### **Session 016 - Complete Flow:**
+
 ```bash
-# === SESSION 015A: FAST MODELS ===
+# === PULL UPDATES ===
 cd /notebooks/ML-number
 source .venv/bin/activate
+git pull origin main
+grep "premium_suffix_score" src/features.py
+python scripts/analyze_price_distribution.py
 
-# Verify data file
-ls -lh data/raw/numberdata.csv
+# === TRAIN MODELS (split into 3-4 sessions!) ===
+# Session 016A: LightGBM (4-6h)
+python training/modular/train_lightgbm_only.py 2>&1 | tee logs/lgb_v2.log
 
-# Test data loading (CRITICAL!)
-python -c "
-from src.data_handler import load_and_clean_data
-df_raw, df_cleaned = load_and_clean_data(filter_outliers_param=True, max_price=100000)
-print(f'✅ Data loaded: raw={len(df_raw)} rows, cleaned={len(df_cleaned)} rows')
-"
-# Expected: raw=6112, cleaned=6100
+# Session 016B: XGBoost (4-6h)
+python training/modular/train_xgboost_only.py 2>&1 | tee logs/xgb_v2.log
 
-# Run SEQUENTIALLY (NOT parallel!)
-echo "=== SESSION 1: Fast Models (5h) ==="
+# Session 016C: CatBoost (3-4h)
+python training/modular/train_catboost_only.py 2>&1 | tee logs/cat_v2.log
 
-python training/modular/train_xgboost_only.py 2>&1 | tee logs/xgb.log
-python training/modular/train_catboost_only.py 2>&1 | tee logs/cat.log
-python training/modular/train_rf_only.py 2>&1 | tee logs/rf.log
+# Session 016D: Results + Ensemble (30min)
+python scripts/summarize_results.py
+python training/modular/train_ensemble_only.py 2>&1 | tee logs/ensemble_v2.log
 
-echo "✅ SESSION 1 DONE!"
-grep "Data loaded" logs/*.log
-ls -lh models/checkpoints/
-```
-
-#### **SESSION 2 (Copy-Paste - 4 hours):**
-```bash
-# === SESSION 015B: SLOW MODEL ===
-cd /notebooks/ML-number
-source .venv/bin/activate
-
-# Verify Session 1 checkpoints
-ls -lh models/checkpoints/*.pkl
-
-echo "=== SESSION 2: Slow Model (4h) ==="
-python training/modular/train_lightgbm_only.py 2>&1 | tee logs/lgb.log
-
-echo "✅ SESSION 2 DONE!"
-ls -lh models/checkpoints/
-```
-
-#### **SESSION 3 (Copy-Paste - 30 min):**
-```bash
-# === SESSION 015C: ENSEMBLE ===
-cd /notebooks/ML-number
-source .venv/bin/activate
-
-# Verify ALL 4 checkpoints
-ls -lh models/checkpoints/*.pkl
-
-echo "=== SESSION 3: Ensemble (30min) ==="
-python training/modular/train_ensemble_only.py 2>&1 | tee logs/ensemble.log
-
-echo "✅ ALL TRAINING COMPLETE!"
+# === VERIFY ===
 ls -lh models/deployed/best_model.pkl
-grep "Best.*R²" logs/ensemble.log
+grep "Best.*R²" logs/ensemble_v2.log
 ```
 
 ---
 
-## 📊 Documentation References
-
-- **Session 013 Fix**: `docs/sessions/SESSION_013_FIX.md` (if exists)
-- **Codex Methodology**: `CLAUDE.md` (Case Study #5)
-- **Paperspace Guide**: `docs/guides/paperspace/PAPERSPACE_START_FROM_ZERO.md`
-- **Modular Training**: `docs/guides/paperspace/PAPERSPACE_MODULAR_TRAINING_GUIDE.md`
+**Created**: 2025-10-11 23:00
+**Session**: 016 - Retrain with Premium Features
+**Status**: ✅ READY TO PULL & RETRAIN!
+**Expected**: R² = 0.70-0.85 (up from 0.36-0.44) 🚀
 
 ---
 
-## ✅ Status Summary
-
-**Session 014**: COMPLETE ✅
-- Git push to GitHub ✅
-- Paperspace setup complete ✅
-- All Codex fixes verified ✅
-- Ready for training ✅
-
-**Session 015**: NEXT
-- Upload data file
-- Start training (8-11 hours)
-- Monitor progress
-- Verify R² ≥ 0.85
-- Deploy best model
-
----
-
-**Created**: 2025-10-11 18:15
-**Session**: 014 - Paperspace Deployment Complete
-**Status**: ✅ READY FOR TRAINING!
-**Next**: Upload data → Start training → Monitor R² 🚀
-
----
-
-**พร้อมเทรนแล้ว!** อัพโหลดไฟล์ data แล้วเริ่มได้เลย! 🎯
+**พร้อม Pull และ Retrain แล้ว!** คาดหวัง R² จะพุ่งจาก 0.36-0.44 → 0.70-0.85! 🎯
