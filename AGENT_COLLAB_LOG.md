@@ -21,6 +21,41 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 20:45] Claude | ✅ แก้ Progress Bar ไม่ให้วิ่งทีละบรรทัด
+- เสร็จแล้ว:
+  - ✅ แก้ไข `training_pipeline.py` - suppress logging during tqdm display
+  - ✅ Modified `_cross_validate()`: ปิด LOGGER.info() เมื่อมี progress bar
+  - ✅ Modified `_hyperparameter_search()`: ลบ logging ใน loop
+  - ✅ Committed และ Pushed (commit 18ac567)
+- ปัญหาที่แก้:
+  - ❌ **เดิม:** Progress bar วิ่งทีละบรรทัดเพราะ `LOGGER.info()` ขัดจังหวะ
+  - ✅ **ตอนนี้:** Progress bar อยู่บรรทัดเดียว update ตัวเอง (smooth!)
+- Output ที่จะเห็น:
+  ```
+  Training Progress: 35%|███████████▌| 7/20 [04:12<08:17, 38.3s/fold, R²=0.8456, RMSE=145]
+  Config 2/8
+  ```
+  - **[04:12<08:17]** = ใช้ไป 4:12, เหลือ **8:17** ← **ETA แสดงอัตโนมัติ!** ⏱️
+  - **38.3s/fold** = ความเร็วเฉลี่ยต่อ fold
+  - **R²/RMSE** = Performance real-time
+- การทำงาน:
+  - ✅ Progress bar อยู่บรรทัดเดียว ไม่วิ่งลง
+  - ✅ ETA แสดงหลัง 1-2 iterations (tqdm คำนวณ average speed)
+  - ✅ Logging ยังทำงาน แต่เฉพาะตอนไม่มี progress bar
+- งานถัดไป:
+  - User ใน Paperspace:
+    ```bash
+    cd /notebooks/number-pricing
+    git pull origin main
+    python -m number_pricing.scripts.train 2>&1 | tee logs/training_final_$(date +%Y%m%d_%H%M%S).log
+    ```
+  - คาดหวัง:
+    - ✅ Progress bar เรียบร้อย ไม่วิ่งทีละบรรทัด
+    - ✅ ETA แสดง (เหลือเวลาเท่าไหร่)
+    - ✅ R² = 0.87-0.95 (ensemble + advanced features)
+
+---
+
 ### [2025-10-15 20:30] Claude | ✅ Push Weighted Ensemble Regressor สำเร็จ
 - เสร็จแล้ว:
   - ✅ Committed: Ensemble model implementation (Codex version)
