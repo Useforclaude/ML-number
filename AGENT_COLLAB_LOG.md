@@ -35,9 +35,22 @@
     - 📈 Performance grade (Excellent/Good/Moderate/Needs Improvement)
   - ✅ เพิ่ม tqdm>=4.65.0 ใน requirements.txt
   - ✅ Pushed to GitHub (commit df8b353)
+  - ✅ แก้ไข column name bug: `phone_number` → `phone_num` (commit 1be8aae)
+    - ปัญหา: Codex เปลี่ยนกลับเป็น phone_number แต่ CSV จริงเป็น phone_num
+    - แก้ไข: config.py line 120, 125 (id_column และ dtype_overrides)
+- สถานะปัจจุบัน:
+  - ⏳ รอ User ใน Paperspace: `git pull origin main && pip install tqdm`
+  - 📊 Training รอบแรก (session 18:00): R² = 0.20 (ต่ำ)
+  - 🎯 Training รอบใหม่ (ยังไม่รัน): คาดหวัง R² = 0.70-0.85
 - งานถัดไป:
-  - ใน Paperspace: `git pull && pip install tqdm`
-  - รัน training: จะเห็น progress bar และสรุปผลสวยงาม!
+  - User จะรัน training ด้วย code ใหม่ (features + hyperparameter search + progress bars)
+  - Monitor ผลลัพธ์ว่า R² เพิ่มขึ้นหรือไม่
+  - ถ้า R² ยังต่ำ → อาจต้องปรับ features หรือ model settings เพิ่มเติม
+
+**📝 Note สำหรับ Codex:**
+- Dataset column: `phone_num` (ไม่ใช่ phone_number) - อย่าเปลี่ยนกลับ!
+- Paperspace path: `/notebooks/number-pricing` (ไม่ใช่ /storage/)
+- Enhanced features ของ Codex ถูก merge แล้ว (diff ratios, prefix/suffix, pair entropy)
 
 ---
 
