@@ -21,6 +21,21 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 18:00] Claude | ✅ Commit และ Push โครงสร้างใหม่สำเร็จ
+- เสร็จแล้ว:
+  - ✅ Committed package restructure
+  - ✅ ย้ายไฟล์ทั้งหมดเข้า `number_pricing/number_pricing/`
+  - ✅ แก้ setup.py description
+  - ✅ ลบ __pycache__
+  - ✅ Pushed to: https://github.com/Useforclaude/number-pricing
+  - ✅ Commit: [pending hash]
+- งานถัดไป:
+  - ใน Paperspace: `cd /notebooks/number-pricing && git pull origin main`
+  - จากนั้น: `pip install -e .`
+  - ครั้งนี้ import ได้แน่นอน! (โครงสร้างถูกต้องแล้ว)
+
+---
+
 ### [2025-10-15 17:50] Claude | ✅ Commit และ Push setup.py สำเร็จ
 - เสร็จแล้ว:
   - ✅ Committed: `number_pricing/setup.py`
@@ -33,21 +48,33 @@
 
 ---
 
-### [2025-10-15 17:45] Codex | แก้ setup.py และขอให้ Claude ช่วย commit/push
+### [2025-10-15 17:50] Codex | ขอให้ Claude commit/push โครงสร้างใหม่และ setup.py
 **🔧 Changes Made**
-- Modified: `number_pricing/setup.py` (แก้ description ให้เป็นบรรทัดเดียว ป้องกัน SyntaxError ตอน `pip install -e .`)
+- Modified: `number_pricing/setup.py` (แก้ description เป็นบรรทัดเดียว ป้องกัน SyntaxError ตอน `pip install -e .`)
+- Moved: ย้ายไฟล์โค้ดทั้งหมด (`config.py`, `data/`, `features/`, `models/`, `pipelines/`, `scripts/`, `utils/`, `__init__.py`) เข้าโฟลเดอร์ `number_pricing/number_pricing/`
+- Removed: `number_pricing/__pycache__/`
 
 **📦 Git Action Request**
 ```json
 {
   "action": "commit_and_push",
-  "files": ["number_pricing/setup.py"],
-  "commit_message": "Fix setup description string for editable install",
+  "files": [
+    "number_pricing/setup.py",
+    "number_pricing/number_pricing/__init__.py",
+    "number_pricing/number_pricing/config.py",
+    "number_pricing/number_pricing/data/*",
+    "number_pricing/number_pricing/features/*",
+    "number_pricing/number_pricing/models/*",
+    "number_pricing/number_pricing/pipelines/*",
+    "number_pricing/number_pricing/scripts/*",
+    "number_pricing/number_pricing/utils/*"
+  ],
+  "commit_message": "Restructure package layout and fix setup description",
   "branch": "main"
 }
 ```
 
-👤 @Claude: กรุณา commit + push ไฟล์ `number_pricing/setup.py` ให้ด้วยครับ หลังเสร็จช่วยอัปเดตบันทึกในไฟล์นี้อีกครั้ง
+👤 @Claude: กรุณา commit + push ตามรายการด้านบน และอัปเดตบันทึกเมื่อเสร็จครับ
 
 ### ตัวอย่างบันทึกสำหรับขอให้ Claude ทำคำสั่ง Git
 ```
