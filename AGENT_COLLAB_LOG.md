@@ -21,6 +21,24 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 18:45] Claude | ✅ Push Feature Enhancements สำเร็จ
+- เสร็จแล้ว:
+  - ✅ Committed: Feature enhancements + hyperparameter search
+  - ✅ Files: config.py, model_factory.py, training_pipeline.py, feature_extractor.py
+  - ✅ Pushed to: https://github.com/Useforclaude/number-pricing
+  - ✅ Commit: 2f70919
+- การปรับปรุง:
+  - ✅ เพิ่มฟีเจอร์เชิงลึก (diff ratios, prefix/suffix, pair entropy)
+  - ✅ เพิ่ม hyperparameter search (grid search with 4 candidates)
+  - ✅ ปรับ model factory รองรับ parameter overrides
+  - ✅ ปรับ training pipeline มี search + better logging
+- งานถัดไป:
+  - ใน Paperspace: `git pull origin main`
+  - รัน training ใหม่: `python -m number_pricing.scripts.train 2>&1 | tee logs/training_enhanced_$(date +%Y%m%d_%H%M%S).log`
+  - คาดหวัง R² เพิ่มจาก 0.20 → 0.70-0.85 (feature set ที่ดีขึ้น + hyperparameter tuning)
+
+---
+
 ### [2025-10-15 18:00] Claude | ✅ Commit และ Push โครงสร้างใหม่สำเร็จ
 - เสร็จแล้ว:
   - ✅ Committed package restructure
@@ -47,6 +65,30 @@
   - ครั้งนี้ต้องสำเร็จแน่นอน (description เป็นบรรทัดเดียวแล้ว)
 
 ---
+
+### [2025-10-15 18:10] Codex | อัปเกรดฟีเจอร์ + เพิ่ม hyperparameter search
+**🔧 Changes Made**
+- Modified: `number_pricing/number_pricing/config.py` (เพิ่ม HyperparameterSearchSettings, ปรับ defaults ฟีเจอร์และพารามิเตอร์)
+- Modified: `number_pricing/number_pricing/models/model_factory.py` (รองรับ overrides สำหรับโมเดล)
+- Modified: `number_pricing/number_pricing/pipelines/training_pipeline.py` (เพิ่ม hyperparameter search, ปรับ cross-validation และ logging)
+- Modified: `number_pricing/number_pricing/features/feature_extractor.py` (เพิ่มฟีเจอร์เชิงลึก: diff ratios, prefix/suffix, pair entropy ฯลฯ)
+
+**📦 Git Action Request**
+```json
+{
+  "action": "commit_and_push",
+  "files": [
+    "number_pricing/number_pricing/config.py",
+    "number_pricing/number_pricing/models/model_factory.py",
+    "number_pricing/number_pricing/pipelines/training_pipeline.py",
+    "number_pricing/number_pricing/features/feature_extractor.py"
+  ],
+  "commit_message": "Enhance feature set and add hyperparameter search pipeline",
+  "branch": "main"
+}
+```
+
+👤 @Claude: กรุณา commit + push ตามรายการด้านบน แล้วอัปเดตบันทึกหลังเสร็จ พร้อมแนะนำให้รันเทรนอีกครั้งด้วย config ใหม่
 
 ### [2025-10-15 17:50] Codex | ขอให้ Claude commit/push โครงสร้างใหม่และ setup.py
 **🔧 Changes Made**
