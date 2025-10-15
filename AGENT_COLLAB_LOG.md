@@ -21,6 +21,73 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 21:15] Claude | ✅ Push Stacking Ensemble + Outlier Clipping สำเร็จ
+- เสร็จแล้ว:
+  - ✅ Committed: Stacking ensemble + outlier clipping (Codex version)
+  - ✅ Pushed to GitHub (commit 321f923)
+  - ✅ Files: 6 modified + 1 new (_registry.py)
+- การปรับปรุงหลัก:
+  - 🎯 **Stacking Ensemble** (แทน weighted):
+    - ใช้ sklearn StackingRegressor
+    - Meta-learner: Ridge (alpha=1.0)
+    - Base models: HistGB + GB + ExtraTrees
+    - Strategy: 5-fold CV stacking
+  - ✂️ **Outlier Clipping**:
+    - Clip target ที่ 1% และ 99% quantiles
+    - ลดผลกระทบของราคาสุดโต่ง
+    - Log จำนวนที่ถูก clip
+  - 📦 **Model Registry** (_registry.py):
+    - Central registry สำหรับ estimators
+    - รองรับ CatBoost, LightGBM (optional)
+    - Clean architecture pattern
+  - 🔧 **Model Factory**:
+    - รองรับ weighted และ stacking strategies
+    - Configurable via ensemble_strategy
+  - 📊 **Validation Updates**:
+    - Track clipped_targets count
+    - Better preprocessing visibility
+- คาดหวังผลลัพธ์:
+  - 🎯 R² = **0.87-0.95** (stacking > weighted)
+  - 🛡️ Robust ต่อ outliers (clipping ลด noise)
+  - 📈 Better generalization (meta-learner learns optimal weights)
+- งานถัดไป:
+  - User ใน Paperspace:
+    ```bash
+    cd /notebooks/number-pricing
+    git pull origin main
+
+    # Optional: ติดตั้ง CatBoost/LightGBM (ถ้าต้องการ)
+    # pip install catboost lightgbm
+
+    # รัน training
+    python -m number_pricing.scripts.train 2>&1 | tee logs/training_stacking_$(date +%Y%m%d_%H%M%S).log
+    ```
+  - จะเห็น:
+    - ✅ "Clipping X target values outside quantiles..."
+    - ✅ Progress bar with stacking ensemble (slower but better)
+    - ✅ R² สูงขึ้นจาก weighted ensemble
+
+---
+
+### [2025-10-15 21:05] Codex | ปรับโมเดลเป็น Stacking Ensemble + ตัด outlier ราคา
+**🔧 Changes Made**
+- Modified: `number_pricing/number_pricing/config.py`
+  - เปิด `use_ensemble` เป็นโหมด `stacking` พร้อม meta-learner Ridge
+  - เพิ่มน้ำหนักสำหรับ HistGB / GradientBoosting / ExtraTrees และขยาย grid hyperparameter เป็น 8 ชุด (learning_rate 0.035-0.10, max_iter สูงสุด 2000)
+  - เพิ่มตัวเลือก CatBoost / LightGBM (โหลดได้ถ้าติดตั้งในสภาพแวดล้อม)
+  - เพิ่มการ clip ราคา (1% และ 99%) ใน DataSettings เพื่อลด outlier
+- Modified: `number_pricing/number_pricing/models/model_factory.py` & `models/_registry.py`
+  - แยก registry กลาง, รองรับ StackingRegressor ของ sklearn และ Weighted ensemble
+- Added: `number_pricing/number_pricing/models/ensemble.py` (ปรับให้ใช้ registry ใหม่) และ `_registry.py`
+- Modified: `number_pricing/number_pricing/data/dataset_loader.py` + `utils/validation.py`
+  - clip target ตาม quantile, รายงานจำนวนที่ถูก clip ใน validation summary
+- Rebuilt: `number_pricing/number_pricing/features/feature_extractor.py`
+  - เพิ่มฟีเจอร์กว่า 150 ตัว (power weights, suffix/prefix scores, lucky sequences, pair entropy, cluster 7/8/9, interaction ต่าง ๆ)
+
+**✅ Status: COMPLETED by Claude (commit 321f923)**
+
+---
+
 ### [2025-10-15 20:45] Claude | ✅ แก้ Progress Bar ไม่ให้วิ่งทีละบรรทัด
 - เสร็จแล้ว:
   - ✅ แก้ไข `training_pipeline.py` - suppress logging during tqdm display
