@@ -21,6 +21,40 @@
 ## บันทึกล่าสุด
 *(เพิ่มบันทึกใหม่ไว้ด้านบนสุดของส่วนนี้)*
 
+### [2025-10-15 20:30] Claude | ✅ Push Weighted Ensemble Regressor สำเร็จ
+- เสร็จแล้ว:
+  - ✅ Committed: Ensemble model implementation (Codex version)
+  - ✅ Pushed to GitHub (commit 6363a10)
+  - ✅ Files: config.py, model_factory.py, ensemble.py (new)
+- ฟีเจอร์ Ensemble:
+  - 🎯 **WeightedEnsembleRegressor** - Blend 3 models:
+    - HistGradientBoosting (weight 0.55 / 55%)
+    - GradientBoosting (weight 0.25 / 25%)
+    - ExtraTrees (weight 0.20 / 20%)
+  - 🔄 Train หลายโมเดลพร้อมกัน แต่ละตัวมี hyperparameters ของตัวเอง
+  - 📊 Predict ด้วย weighted average (blend predictions)
+  - ⚙️  รองรับ scikit-learn API (fit/predict)
+  - 🎛️  Primary model รับ hyperparameter overrides จาก search
+- การปรับปรุง Config:
+  - 📈 Hyperparameter search: 4 → **8 candidates** (more thorough)
+  - 🔍 Optimized learning rates: 0.035-0.10 (wider range)
+  - 🌳 Optimized tree params: max_leaf_nodes 24-120, max_iter 600-2000
+- คาดหวังผลลัพธ์:
+  - 🎯 R² = **0.87-0.95** (ensemble โดยทั่วไปดีกว่า single model 5-10%)
+  - 🏆 Ensemble ช่วยลด overfitting และเพิ่ม generalization
+  - ⏱️  Training time: ~3x slower (train 3 models instead of 1)
+- งานถัดไป:
+  - User ใน Paperspace:
+    ```bash
+    cd /notebooks/number-pricing
+    git pull origin main
+    python -m number_pricing.scripts.train 2>&1 | tee logs/training_ensemble_$(date +%Y%m%d_%H%M%S).log
+    ```
+  - จะเห็น progress bar ที่สวยงาม (20 steps search + 5 final CV)
+  - รอดูผล R² ว่าสูงขึ้นจริงหรือไม่
+
+---
+
 ### [2025-10-15 20:15] Claude | ✅ ปรับเป็น Single Progress Bar สำเร็จ
 - เสร็จแล้ว:
   - ✅ แก้ไข `training_pipeline.py` เป็นแถบความคืบหน้าเดียว
